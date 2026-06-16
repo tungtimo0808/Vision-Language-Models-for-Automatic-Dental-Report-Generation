@@ -1,0 +1,5 @@
+<image>
+This is the {region} crop of a panoramic dental radiograph.
+Identify the visible annotated teeth using FDI notation and report each tooth condition.
+Return only valid JSON with this schema:
+{"region":"string","teeth":[{"fdi":"string","condition":"string","condition_name":"string"}],"comment":"string"}

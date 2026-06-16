@@ -1,0 +1,186 @@
+History of changes and checks
+=============================
+
+Workspace:
+d:\Self\inredd-dataset-pan924-yolo-format-main
+
+Main files involved:
+- report.tex
+- references.bib
+- report.pdf
+- USTH.png
+- USTH.jpg
+- Phase1.png
+- phase_1.png
+
+1. Report content update
+------------------------
+- Reworked the report content to match the current VLM dataset pipeline.
+- Kept the original report structure as much as possible.
+- Wrote the content only up to the current data preparation stage.
+- Adjusted the topic framing from a single model direction to a models/comparison direction.
+- Made the text clear that the generated report is only a support output and still needs dentist review.
+- Added the idea that later work can compare VLM report outputs with Faster R-CNN-style detection results.
+- Used simpler B2-level English and avoided overly academic wording.
+- Avoided long, nested sentences where possible.
+
+2. Source-based writing and references
+--------------------------------------
+- Added references to official/scientific sources in references.bib.
+- Used IEEE-style bibliography output with numeric citations.
+- Added or kept citations for PAN924, dental panoramic X-ray detection, radiology report generation, VLM work, and medical VLM review material.
+- Changed natbib to numeric mode so it works with IEEEtran bibliography style.
+
+3. Expansion of early report sections
+-------------------------------------
+- Expanded the early sections so they are less short and more suitable for a Bachelor-level report.
+- Expanded Background and Motivation.
+- Expanded Problem Statement.
+- Expanded Objectives.
+- Expanded Literature Review.
+- Kept the writing practical, clear, and not too academic.
+
+4. Methodology update from Section 2.1.2 onward
+-----------------------------------------------
+- The user requested that nothing before Section 2.1.2 should be changed.
+- I located Section 2.1.2 at:
+  \subsection{Base Prompt Design for VQA Generation}
+- I rewrote only from that point onward.
+- Renamed the old VQA title to:
+  \subsection{Common Report Schema and Prompt Templates}
+- Removed old pipeline terms such as VQA, AI-Assisted VQA Generation, and GalLens.
+- Replaced the old content with the current real pipeline:
+  - common JSONL report schema
+  - full panoramic report task
+  - regional report task
+  - clinical text generation from ground-truth labels
+  - validation and quality control
+  - final common dataset and label set
+  - converted outputs for later model experiments
+- Clearly stated that the current pipeline does not call an outside model or API to generate labels.
+- Explained that generate_clinical_reports.py only writes comment and summary text.
+- Explained that image path, split, task name, tooth number, condition label, and JSON structure are preserved.
+- Explained that validate_common_dataset.py checks fields, image paths, schemas, labels, and split consistency.
+- Added the validated dataset counts:
+  - 924 unique source images
+  - 4620 total samples
+  - 924 full-image report samples
+  - 3696 regional report samples
+  - train: 3695 samples
+  - validation: 460 samples
+  - test: 465 samples
+- Explained the 12 final condition labels.
+- Explained the label remapping:
+  - Ri -> Te
+  - RiM -> Te
+  - TeM -> Te
+  - I -> M3i
+- Explained that converted outputs were prepared for:
+  - Qwen
+  - LLaVA
+  - InternVL
+  - Phi
+  - PaliGemma
+- Added short placeholder text for Experimental Setup and Results because training/evaluation is not done yet.
+
+5. Pipeline files inspected
+---------------------------
+- Read generate_clinical_reports.py to confirm that comments and summaries are generated from fixed PAN924 labels.
+- Read build_5view_common_dataset.py to confirm:
+  - five views per image
+  - image-space regions
+  - 10 percent overlap in crops
+  - stratified group split
+  - common JSONL output
+- Read validate_common_dataset.py to confirm validation behavior.
+- Read convert_dataset.py to confirm the converted model-specific formats.
+- Read prompt templates:
+  - full_report_prompt.txt
+  - regional_report_prompt.txt
+- Read metadata files:
+  - build_summary.json
+  - split_report.json
+  - validation_report.json
+  - clinical_generation_summary.json
+  - conversion_summary.json
+
+6. Audit steps
+--------------
+- Audited the writing several times for AI-like wording.
+- Rewrote parts that sounded too generic or too formal.
+- Checked for old terms after rewriting:
+  - VQA
+  - AI-Assisted
+  - GalLens
+  - Base Prompt
+  - model-agnostic
+  - I avoid
+- Removed or replaced these terms where they no longer matched the current pipeline.
+- Checked that the section before 2.1.2 was not changed by hashing the first 318 lines of report.tex.
+- Confirmed the hash stayed the same after editing Section 2.1.2 onward.
+- Checked long sentences in the rewritten block and shortened the ones that were too long.
+- Changed some wording to sound more natural:
+  - "external AI model" -> "outside model"
+  - split long examples into shorter sentences
+  - split long metadata and conversion sentences
+
+7. LaTeX build setup
+--------------------
+- pdflatex was not available at first.
+- Installed MiKTeX using winget.
+- Used the MiKTeX binaries from:
+  C:\Users\timodapoet\AppData\Local\Programs\MiKTeX\miktex\bin\x64
+- Enabled MiKTeX automatic package installation.
+- Built the report using pdflatex and BibTeX.
+- Used the usual build sequence when references were needed:
+  pdflatex -> bibtex -> pdflatex -> pdflatex
+
+8. Asset fixes for PDF build
+----------------------------
+- The report called USTH.jpg, but the file was missing.
+- Downloaded the USTH logo from the official USTH website as USTH.png.
+- Created USTH.jpg from USTH.png because the LaTeX file called USTH.jpg.
+- The report called phase_1.png, while only Phase1.png existed.
+- Created phase_1.png from Phase1.png so the existing LaTeX line could compile without changing the part before Section 2.1.2.
+- Created a workflow image Phase1.png for the Phase 1 data preparation process.
+
+9. PDF build result
+-------------------
+- Built report.pdf successfully.
+- Final PDF path:
+  d:\Self\inredd-dataset-pan924-yolo-format-main\report.pdf
+- The final build produced a PDF with 15 pages.
+- No fatal LaTeX errors remained.
+- Citations were resolved.
+- One small overfull warning remains around the figure area before Section 2.1.2.
+- I did not edit that area because the user explicitly asked not to change anything before Section 2.1.2.
+
+10. Files created or changed
+----------------------------
+- Modified:
+  - report.tex
+- Created:
+  - references.bib
+  - USTH.png
+  - USTH.jpg
+  - Phase1.png
+  - phase_1.png
+  - report.pdf
+  - history.txt
+- LaTeX also generated auxiliary build files such as:
+  - report.aux
+  - report.bbl
+  - report.blg
+  - report.log
+  - report.out
+  - report.toc
+  - report.lof
+  - report.lot
+
+11. Current status
+------------------
+- report.tex has been updated to match the current dataset preparation pipeline.
+- The rewritten section starts from Section 2.1.2.
+- The text before Section 2.1.2 was preserved during that specific rewrite.
+- report.pdf builds successfully.
+- The report currently stops at data preparation, with training and results left for the next stage.

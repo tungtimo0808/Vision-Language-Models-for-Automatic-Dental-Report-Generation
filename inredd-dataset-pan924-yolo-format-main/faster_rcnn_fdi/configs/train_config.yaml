@@ -1,0 +1,51 @@
+project:
+  name: pan924_faster_rcnn_32teeth
+  seed: 42
+  output_dir: faster_rcnn_fdi/outputs
+
+data:
+  images_root: images
+  train_annotations: faster_rcnn_fdi/data/annotations/train_coco.json
+  val_annotations: faster_rcnn_fdi/data/annotations/val_coco.json
+  test_annotations: faster_rcnn_fdi/data/annotations/test_coco.json
+  min_size: 512
+  max_size: 768
+
+model:
+  architecture: fasterrcnn_mobilenet_v3_large_320_fpn
+  num_classes: 33  # 32 teeth + background
+  pretrained: true
+  trainable_backbone_layers: 1
+
+train:
+  epochs: 80
+  batch_size: 1
+  grad_accum_steps: 4
+  learning_rate: 0.0002
+  weight_decay: 0.0001
+  num_workers: 0
+  device: cuda
+  amp: true
+  clip_grad_norm: 5.0
+  val_max_batches: 40
+  save_every: 1
+
+inference:
+  score_threshold: 0.3
+  nms_threshold: 0.5
+  max_detections_per_img: 64
+
+eval:
+  score_threshold: 0.3
+  iou_threshold: 0.5
+  test_max_batches: 0  # 0 means evaluate full test split
+
+early_stopping:
+  enabled: true
+  patience: 8
+  min_delta: 0.0005
+  monitor: val_loss
+
+crop_sync:
+  expand_width: 1.8
+  expand_height: 1.2

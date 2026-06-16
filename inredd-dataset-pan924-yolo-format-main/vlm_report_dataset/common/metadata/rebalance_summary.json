@@ -1,0 +1,60 @@
+{
+  "seed": 924,
+  "cap": 8.0,
+  "method": "regional-only oversampling, KG inverse-prevalence multiplier, MAX-combine, stochastic rounding",
+  "rare_conditions": [
+    "Dc",
+    "Im",
+    "P",
+    "Rr",
+    "M3f"
+  ],
+  "multipliers": {
+    "Dc": 7.89,
+    "Im": 8.0,
+    "P": 4.0,
+    "Rr": 3.97,
+    "M3f": 3.34
+  },
+  "regional_samples_containing": {
+    "M3f": 170,
+    "P": 142,
+    "Im": 71,
+    "Rr": 143,
+    "Dc": 72
+  },
+  "train_rows_before": 3695,
+  "train_rows_after": 5817,
+  "duplicates_added": 2122,
+  "growth_pct": 57.4,
+  "val_rows": 460,
+  "test_rows": 465,
+  "tooth_occurrences_before": {
+    "C": 949,
+    "CpuM": 1058,
+    "Dc": 174,
+    "Di": 860,
+    "H": 26898,
+    "Im": 199,
+    "M3f": 398,
+    "M3i": 628,
+    "P": 362,
+    "R": 15571,
+    "Rr": 332,
+    "Te": 2258
+  },
+  "tooth_occurrences_after": {
+    "C": 1648,
+    "CpuM": 2859,
+    "Dc": 981,
+    "Di": 1677,
+    "H": 38170,
+    "Im": 1081,
+    "M3f": 959,
+    "M3i": 704,
+    "P": 1178,
+    "R": 24463,
+    "Rr": 1109,
+    "Te": 4096
+  }
+}

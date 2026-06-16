@@ -1,0 +1,5 @@
+01. 1000-F-19.jpg | image_id=201 | drawn_teeth_annotations=32 | raw_annotations=32
+02. 1002-F-20.jpg | image_id=203 | drawn_teeth_annotations=32 | raw_annotations=33
+03. 1005-F-19.jpg | image_id=205 | drawn_teeth_annotations=32 | raw_annotations=32
+04. 1006-F-25.jpg | image_id=206 | drawn_teeth_annotations=32 | raw_annotations=32
+05. 1011-F-20.jpg | image_id=209 | drawn_teeth_annotations=32 | raw_annotations=32

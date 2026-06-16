@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "error_count": 0,
+  "errors": [],
+  "unique_source_images": 924,
+  "rows_by_split": {
+    "train": 3695,
+    "val": 460,
+    "test": 465
+  },
+  "rows_by_task": {
+    "full_quadrant_report": 924,
+    "regional_report": 3696
+  },
+  "rows_by_view": {
+    "full": 924,
+    "image_upper_left": 924,
+    "image_upper_right": 924,
+    "image_lower_left": 924,
+    "image_lower_right": 924
+  },
+  "condition_counts": {
+    "H": 34139,
+    "M3f": 481,
+    "M3i": 784,
+    "R": 19323,
+    "C": 1253,
+    "Te": 2778,
+    "P": 426,
+    "CpuM": 1315,
+    "Im": 250,
+    "Rr": 407,
+    "Dc": 210,
+    "Di": 1168
+  },
+  "comment_source_counts": {
+    "clinical_template_v2": 4620
+  }
+}

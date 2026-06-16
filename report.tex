@@ -1,0 +1,560 @@
+\documentclass[a4paper,12pt]{report}
+\usepackage[margin=1in]{geometry} % 1-inch margins
+\usepackage{tikz} % For the border
+\usetikzlibrary{calc} % For coordinate calculations
+\usepackage{graphicx} % For including the logo
+\usepackage{lmodern} % Font package
+\usepackage{titlesec} % Section formatting
+\usepackage{fancyhdr} % Footer customization
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{geometry}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{makecell}
+\usepackage{float}
+\usepackage{tocloft}
+\usepackage[colorlinks=true, linkcolor=black, citecolor=black, urlcolor=black]{hyperref}
+\usepackage{lipsum}
+\usepackage{adjustbox} % trong phần preamble
+\usepackage{multicol}
+\usepackage{enumitem}
+\usepackage{indentfirst}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows.meta, positioning, fit, backgrounds, calc, shadows}
+\usepackage{multirow}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{xcolor}
+\newcommand{\minisection}[1]{%
+  \vspace{1ex}
+  \noindent\textbf{#1}\par
+  \vspace{0.5ex}
+}
+\setcounter{tocdepth}{2}
+\setcounter{secnumdepth}{3}
+
+\usepackage[numbers]{natbib}
+\renewcommand{\bibname}{References}
+
+% Tùy chọn: Gói float để ép hình nằm đúng chỗ mong muốn
+\usepackage{float}
+
+\pagestyle{fancy}
+\setlength{\headheight}{14.5pt}
+\lhead{}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,  
+    showlines=false,
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{ % Tùy chỉnh các thuộc tính
+    basicstyle=\ttfamily\small, % Kiểu chữ máy tính nhỏ
+    backgroundcolor=\color{lightgray}, % Màu nền nhẹ cho code
+    keywordstyle=\color{blue}\bfseries, % Màu xanh dương cho từ khóa, in đậm
+    commentstyle=\color{green}, % Màu xanh lá cho comment
+    stringstyle=\color{purple}, % Màu tím cho chuỗi
+    numberstyle=\tiny\color{gray}, % Màu xám cho số dòng
+    numbers=left, % Hiển thị số dòng bên trái
+    stepnumber=1, % Đánh số mỗi dòng
+    numbersep=5pt, % Khoảng cách giữa số dòng và mã
+    showstringspaces=false, % Không hiển thị dấu cách trong chuỗi
+    breaklines=true, % Ngắt dòng tự động
+    captionpos=b, % Đặt caption ở dưới code
+    frame=single, % Đặt khung xung quanh code
+}
+
+
+\begin{document}
+\thispagestyle{empty}  % Xóa số trang của trang đầu tiên
+
+% --- First Page Border ---
+\begin{tikzpicture}[remember picture, overlay]
+    \draw[line width=2pt]
+        ($(current page.south west) + (0.5in, 0.5in)$) 
+        rectangle 
+        ($(current page.north east) - (0.5in, 0.5in)$);
+\end{tikzpicture}
+
+% --- University Name ---
+\begin{center}
+    
+    {\Large \textbf{University of Science and Technology of Hanoi}}\\[0.75cm]
+    
+    % --- University Logo ---
+    
+\begin{center}
+  \makebox[\textwidth][c]{
+    \hspace*{1.2cm}
+    \includegraphics[width=0.7\textwidth]{USTH.jpg}
+  }
+\end{center}
+
+    
+    \vspace{1cm}
+    {\huge \textbf{GROUP PROJECT}}\\[0.75cm]
+    
+    % --- Assignment Title ---
+    \vspace{0.5cm} % khoảng cách trước Labwork I
+    {\LARGE \textbf{VISION LANGUAGE MODELS}}\\
+    \vspace{0.5cm}
+    {\LARGE \textbf{FOR AUTOMATIC  }}\\
+    \vspace{0.5cm}
+    {\LARGE \textbf{DENTAL REPORT GENERATION }}\\
+    \vspace{1.5cm} % khoảng cách sau Labwork I
+\end{center}
+
+% --- Student Information ---
+\vspace{0.5cm}
+\noindent
+\begin{center}
+
+    \begin{tabular}{@{}l@{\hspace{3cm}}l@{}}
+  \textbf{Student Name} & \textbf{Student ID} \\[0.6cm]
+  Nguyen Hoang Tung     & 22BA13388           \\
+  
+    \end{tabular}
+
+\end{center}
+
+\vfill
+
+% --- Footer ---
+\begin{center}
+    \textit{Hanoi, January 2026}
+\end{center}
+\newpage
+\newpage
+
+
+
+
+
+
+
+
+\begin{center}
+    \textbf{\LARGE Abstract}
+
+\end{center}
+
+Panoramic dental X-ray images are widely used in dental clinics. A single image can show the teeth, jaw area, and several dental conditions. In practice, the dentist not only reads the image, but also writes the findings into a clear report.
+
+This thesis studies Vision-Language Models (VLMs) for dental report generation from panoramic X-ray images. The goal is not to replace dentists. The generated report is treated as a first draft. A trained dentist still needs to check the image, edit the report, and make the final clinical decision.
+
+The current stage focuses on data construction. A PAN924-based instruction dataset is built from ground-truth annotations \cite{inredd_pan924_2025}. Each sample keeps the tooth FDI number, the dental condition label, and the image path. Short clinical comments and summaries are then added for report-style training. Each panoramic image is prepared in five views: one full image and four regional crops. This design keeps both the full mouth context and clearer regional tooth details.
+
+The dataset is first kept in a common format. It is then converted into several model formats, including Qwen, LLaVA, InternVL, Phi, and PaliGemma. This matches the topic name, because the thesis studies several VLMs instead of a single model. A later experiment can compare these VLMs with Faster R-CNN based models. The comparison will focus on report text quality and tooth-level finding correctness.
+
+For now, the main contribution is the data preparation stage. It uses the existing PAN924 annotations, creates five-view image samples, writes report text from fixed templates, balances the rare dental conditions, checks the final data, and exports the dataset for different model families. The training and evaluation setup is also prepared for the next stage.
+ 
+
+\vspace{1cm}
+
+
+\newpage
+\pagenumbering{arabic} 
+\setcounter{page}{2}  
+
+
+
+\tableofcontents 
+\listoffigures       
+\listoftables     
+
+\chapter{Introduction}
+\section{Background and Motivation}
+The panoramic dental X-ray, also called an orthopantomogram or OPG, is a common image in dentistry \cite{inredd_pan924_2025}. One image can show the teeth, jawbone, and other nearby structures. Dentists use it for treatment planning, checking missing or impacted teeth, reviewing restorations, and observing dental conditions across the mouth. Because the image covers a wide area, it is useful as an overview image before more detailed treatment decisions are made.
+
+Reading an OPG requires careful work. The dentist first looks at the whole image to understand the general condition of the mouth. After that, smaller regions and individual teeth are checked. For each tooth, the dentist may need to consider the tooth number, visible restorations, caries, implants, residual roots, third molars, or other marked conditions. These findings then need to be written in a form that can be used for treatment planning or further discussion.
+
+This report writing step is important, but it is also repetitive. Many dental reports follow a similar structure. The content changes from patient to patient, but the writer still has to list tooth-level findings and summarize them clearly. In a busy clinic, this can take time, especially when many images are reviewed in the same day. A system that prepares an initial report could reduce part of this repeated writing work.
+
+This thesis starts from that practical problem. The aim is to prepare a first draft of a dental report from an OPG image. The output should not be used as a final diagnosis by itself. It is only a support result, and a dentist must still review it. This point is important because medical images can be difficult to interpret, and final clinical decisions require professional responsibility.
+
+The recent progress of Vision-Language Models (VLMs) makes this direction possible. A VLM can take an image together with a text instruction and produce a text answer. This is useful for report generation because the expected output is not only a class label. The model may need to list teeth, describe conditions, and write a short summary.
+
+At the same time, object detection models such as Faster R-CNN remain strong for localizing objects in images. For this reason, a fair comparison between VLM-style outputs and Faster R-CNN based outputs is also useful.
+
+The title uses ``Vision Language Models'' in plural because the work is not limited to one model. The data pipeline is prepared so that different VLMs can be trained or tested on the same task. Their results can later be compared with Faster R-CNN based models. Therefore, the thesis is not only about producing one final text output. It also studies whether VLMs are useful for dental image understanding and structured report generation.
+
+\section{Problem Statement}
+A panoramic dental image contains many small details. A single OPG can include up to 32 teeth. Each tooth may have a different condition, such as caries, restoration, implant, residual root, or impacted third molar. The model must deal with both image-level information and tooth-level information. This makes the task harder than a simple image classification problem.
+
+For a VLM, this is not an easy image-to-text task. If the model only receives the full image, small tooth-level details may be missed. The teeth are close to each other, and some findings occupy a small part of the image. If the model only receives small crops, it may lose the full context of the mouth. For this reason, the dataset should support both full-image and regional-image learning.
+
+Another issue is that the desired output is not a single label. A report-like output should contain tooth numbers, condition names, and short written comments. It should also keep the structure clear enough for later evaluation. If the answer is only free text, it is difficult to check whether the model has listed the correct tooth or the correct condition. A JSON-based target format is used in this project to make the output easier to validate.
+
+A second technical problem is the training format. Qwen, LLaVA, InternVL, Phi, and PaliGemma do not all use the same file structure. If the dataset is written only for one model, it is harder to compare different models fairly. For this reason, the dataset is first built in one common format, then converted into model-specific formats. The common dataset works as the stable version of the data, while the converted datasets serve the needs of each model family.
+
+The last problem is report text. The original PAN924 annotations contain useful labels, but they are not written as clinical report sentences. For VLM training, the target answer should include both structured labels and readable text. This thesis handles that step by generating short clinical comments and summaries from the fixed ground-truth labels. The generated comments do not add new medical findings. They only express the existing labels in a report-like form.
+
+
+\section{Objectives}
+The objective of this stage is to build the data foundation for later VLM experiments. The work is limited to data construction and dataset conversion. Model training, model comparison, and final evaluation are left for the next stages of the thesis.
+
+The specific objectives for this stage are:
+
+1. Build a clean instruction dataset from the PAN924 panoramic dental X-ray dataset.
+ 
+2. Keep the dataset based on ground-truth labels, including FDI tooth numbers and dental condition labels.
+
+3. Create five image views for each original OPG image: one full image and four regional crops.
+
+4. Generate report-style comments and summaries from fixed clinical templates.
+
+5. Validate the final dataset to make sure the image paths, labels, tasks, and output schemas are consistent.
+ 
+6. Convert the common dataset into training formats for several VLM families, so later experiments can compare different models on the same data split.
+
+7. Prepare a balanced training set that gives the rare dental conditions a stronger learning signal, while keeping the validation and test sets unchanged.
+
+These objectives are chosen to keep the project realistic at bachelor level. The main focus is not to build a large clinical system immediately. The focus is to prepare a reliable dataset and a clear pipeline, so that later experiments can be run in a controlled way.
+
+\section{Literature Review}
+
+\subsection*{Medical Image Report Generation}
+Medical image report generation has been studied for several years. Many systems use an image encoder and a text decoder. The image encoder reads visual features from the image. The text decoder then generates a report. This design is similar to image captioning, but the medical setting is stricter. The report needs to mention clinically useful findings, not just describe visible objects.
+
+Later methods used attention and Transformer-based models. R2Gen is one example. It used a memory-based Transformer design for radiology report generation and tested it on IU X-Ray and MIMIC-CXR \cite{chen2020r2gen}. This type of work shows that report generation benefits from both image features and language patterns. A radiology report often uses repeated medical phrases, so the model needs to learn both visual evidence and report style.
+
+Most well-known work in this area still focuses on chest X-rays. Dental panoramic images are different. A chest X-ray usually has large anatomical regions, while an OPG contains many small tooth regions in one image. The output also needs tooth numbers and tooth-level conditions. This makes direct transfer from general radiology report generation less simple.
+
+For this thesis, the main lesson from previous work is simple: the model needs data from the target medical domain. A general model may write fluent sentences, but it may still miss dental details. This is why the dataset construction step is important before training or comparing VLMs. The dataset must show the model how dental images, tooth labels, and report text are connected.
+ 
+\subsection*{Vision-Language Models in Dental Radiology}
+Vision-Language Models take an image and a text instruction as input. Then they return a text answer. LLaVA is a clear example of this idea, because it connects a vision encoder with a large language model and uses visual instruction tuning \cite{liu2023visual}. In medicine, VLMs are also studied for report generation and visual question answering \cite{hartsock2024vlmreview}.
+
+This instruction-based setup is useful for dental reporting. The user can ask the model to return a specific structure, such as a list of visible teeth and their conditions. The answer can include both labels and short natural-language comments. This is different from a detector, which normally returns bounding boxes and class labels.
+
+In dental radiology, VLMs are still newer than detection models. A VLM may be useful because it can return a structured answer, not just a class label or a bounding box. For example, it can list teeth, give condition names, and write a short summary in one response. However, this does not mean that a VLM is automatically better. It still needs proper data and careful evaluation.
+
+Different VLMs also have different input formats. Qwen-style data, LLaVA-style chat data, InternVL conversations, Phi prompts, and PaliGemma samples are not identical. To keep the data consistent, this thesis uses one common dataset as the main version. The converted files are generated from that dataset, so model comparison is cleaner. This is also useful because the same training and testing splits can be reused for different model families.
+
+
+\subsection*{Tooth Detection on Panoramic X-rays}
+Faster R-CNN is a common baseline for object detection. In dental panoramic X-rays, it can detect tooth boxes, tooth numbers, or dental condition classes. Tuzoff et al. used Faster R-CNN for tooth detection and reported high detection performance on panoramic radiographs \cite{tuzoff2019tooth}.
+
+This type of model is strong when the output is a fixed label and a bounding box. It is also easier to evaluate with standard detection metrics. For example, the model can be judged by whether the tooth location and class are correct. This makes Faster R-CNN a practical baseline for tooth-level tasks.
+
+However, a detection model does not naturally write a clinical report. It can say where a tooth is and what class it belongs to, but it does not directly produce a readable paragraph or a structured report summary. A VLM can produce text, so it may be better for report-style output. At the same time, the VLM output is harder to evaluate because it mixes recognition and language generation.
+
+Because of that, Faster R-CNN is useful as a comparison point. Later experiments can compare VLM outputs with Faster R-CNN based results. The comparison can focus on tooth-level correctness, condition labels, and report text quality. This helps separate two questions: whether the model recognizes the dental findings, and whether it can express them in a useful report format.
+ 
+ 
+\chapter{Methodology}
+\section{Overview of the dataset construction process}
+
+\subsection{Raw Image Collection}
+
+The raw data comes from the PAN924 panoramic dental X-ray dataset \cite{inredd_pan924_2025}. It contains 924 panoramic images. Each image includes tooth annotations with the FDI tooth number and the dental condition label.
+
+The original images are stored in the \texttt{images/} folder. The main annotation file is \texttt{annotations/dataset\_final\_v2.json}. This file is used as the source for the VLM dataset. No new disease labels are created by hand in this step. The labels come from the existing ground-truth annotation file.
+
+The first script in the pipeline is \texttt{build\_5view\_common\_dataset.py}. It reads the original annotations, loads the source images, and builds the common training data. This common dataset is the main dataset of the thesis. The model-specific datasets are created from it later.
+
+For each panoramic image, the pipeline creates five image views:
+
+\begin{itemize}
+    \item one full panoramic image;
+    \item one upper-left image-space crop;
+    \item one upper-right image-space crop;
+    \item one lower-left image-space crop;
+    \item one lower-right image-space crop.
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \begin{adjustbox}{center, margin=0.5cm 0cm 0cm 0cm}
+        \includegraphics[width=1\textwidth]{phase_1.png}
+    \end{adjustbox}
+    \caption{Overview of Phase 1: Create image views}
+    \label{fig:phase1}
+\end{figure}
+
+
+The regional crops are not random. The image is split using the image width and the tooth annotation positions. The vertical split uses the median position of upper and lower tooth annotations. A 10\% overlap is added in both directions to keep useful tooth information near the crop borders.
+
+The region names are image-space names. For example, \texttt{image\_upper\_left} means the upper-left crop in the image. It does not mean the anatomical left side of the patient.
+
+\begin{table}[H]
+\centering
+\caption{Current PAN924 VLM dataset size}
+\begin{tabular}{lccp{5.2cm}}
+\toprule
+Split & Source images & Samples & Description \\
+\midrule
+Train & 739 & 3695 & Five views per image \\
+Validation & 92 & 460 & Five views per image \\
+Test & 93 & 465 & Five views per image \\
+\midrule
+Total & 924 & 4620 & 924 full reports and 3696 regional reports \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+
+\subsection{Common Report Schema and Prompt Templates}
+
+The current pipeline does not build open-ended question-answer data. It builds a common report dataset for VLM training. This is a better fit for the current thesis stage because the output needs to look like a short dental report, not like a question-answer pair.
+
+Each sample is stored as one JSONL row. The row keeps the image path, source image name, view name, task name, prompt, target answer, labels, and metadata. The answer is always stored as valid JSON. This makes the dataset easier to inspect by script and easier to convert later.
+
+There are two task types. The first task is \texttt{full\_quadrant\_report}. It uses the full panoramic image. The target output contains the four image-space regions used in the crop step. Each region has a list of visible annotated teeth, the FDI number, the condition code, the condition name, and one short comment. The full report also has an overall summary.
+
+The second task is \texttt{regional\_report}. It uses one cropped image region. The target output contains the region name, the visible annotated teeth in that crop, and one short comment for the region.
+
+The prompt is kept short on purpose. It tells the model the image type and the JSON schema that must be returned. Long medical instructions are not used at this stage because the first goal is to make a stable dataset. The clinical meaning comes from the ground-truth labels, not from a free-form prompt.
+
+\begin{table}[H]
+\centering
+\caption{Task types in the common report dataset}
+\begin{tabular}{llp{5.6cm}}
+\toprule
+Task & Image input & Target output \\
+\midrule
+\texttt{full\_quadrant\_report} & Full panoramic image & Four-region JSON report and summary \\
+\texttt{regional\_report} & One regional crop & Tooth list and region comment \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Clinical Text Generation from Ground-Truth Labels}
+
+The report text is generated from the annotation labels. No external AI model or API is used in this step. This is important because the dataset should not add new findings that are not in the original annotations.
+
+The script \texttt{generate\_clinical\_reports.py} reads the raw common JSONL files from the raw subfolder of \texttt{common}. Then it writes the final JSONL files back to \texttt{common}. The script only changes the \texttt{comment} and \texttt{summary} fields. It does not change the image path, split, task name, tooth number, condition label, or JSON structure.
+
+The text generation rule is simple. If a region has abnormal findings, those findings are mentioned first. Teeth with the same condition are grouped together. Healthy teeth are not listed one by one when abnormal teeth already exist. If a region has only healthy annotated teeth, the comment says this clearly. If a region has no annotated teeth, the comment also says this clearly.
+
+For example, if a region contains caries on one tooth and a restoration on another tooth, the generated comment has this style:
+
+\begin{quote}
+This region shows caries on tooth 33 and a restoration on tooth 34. The remaining annotated teeth are healthy.
+\end{quote}
+
+This text is not used as a final clinical diagnosis. It is used as a training target for report-style VLM output. In a real dental setting, the original X-ray and any generated report must still be checked by a qualified dentist.
+
+
+\subsection{Validation and Quality Control}
+
+After the common dataset is generated, the validation script checks whether each JSONL row has the required fields. It also checks the image paths, task names, output JSON schema, condition labels, and split information.
+
+For full-image reports, the validator checks that all four region keys are present. It also checks that the target teeth match the saved labels for each region. For regional reports, it checks that the region name and tooth list in the target output match the label fields.
+
+The validation result shows \texttt{ok: true} and \texttt{error\_count: 0}. The final common dataset contains 924 unique source images and 4620 samples. These include 924 full-image report samples and 3696 regional report samples. The split is image-based, so one source image does not appear in more than one split.
+
+Several samples are also inspected manually. This is mainly to see whether the comments match the tooth labels and whether the crops are useful. This manual check is not the same as expert dental review. It is only a practical check for dataset consistency at this stage.
+
+
+\subsection{Final Common Dataset and Label Set}
+
+The final common dataset is stored in \texttt{vlm\_report\_dataset/common/}. This folder is treated as the main dataset. It contains \texttt{train.jsonl}, \texttt{val.jsonl}, and \texttt{test.jsonl}. It also contains the copied full images, the four regional crops for each image, and metadata files such as the build summary, split report, crop manifest, clinical generation summary, and validation report.
+
+The dataset uses 12 condition codes after label cleaning. Some rare or overlapping labels are remapped before the final files are written. For example, \texttt{Ri}, \texttt{RiM}, and \texttt{TeM} are mapped to \texttt{Te}. The label \texttt{I} is mapped to \texttt{M3i}. This keeps the label set easier to handle during training and evaluation.
+
+\begin{table}[H]
+\centering
+\caption{Dental condition labels used in the final dataset}
+\begin{tabular}{ll}
+\toprule
+Code & Condition name \\
+\midrule
+\texttt{H} & healthy \\
+\texttt{C} & caries \\
+\texttt{R} & restored \\
+\texttt{Te} & endodontic treatment \\
+\texttt{Im} & implant \\
+\texttt{Rr} & residual root \\
+\texttt{M3i} & impacted third molar \\
+\texttt{M3f} & developing third molar \\
+\texttt{CpuM} & prosthetic crown \\
+\texttt{Dc} & crown destruction \\
+\texttt{Di} & incisal or occlusal wear \\
+\texttt{P} & pontic \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Balancing the Rare Conditions}
+
+The dental conditions are not evenly distributed. Healthy teeth and restorations appear very often. Other conditions are rare. In the training split, crown destruction (\texttt{Dc}), implant (\texttt{Im}), pontic (\texttt{P}), residual root (\texttt{Rr}), and developing third molar (\texttt{M3f}) each appear far less than the common labels. If the data is used as it is, the model sees these rare conditions only a few times. It can then learn to ignore them.
+
+To reduce this problem, the script \texttt{rebalance\_common.py} builds a balanced training set. It does not create new images. It only repeats some existing samples, so the rare conditions are seen more often. The new set is written to \texttt{common\_balanced/}, next to the common dataset.
+
+The balancing uses two simple ideas together. First, only the regional crops are repeated, never the full reports. A crop lists about eleven teeth, while a full report lists about twenty-one. In a crop, a rare tooth is a larger part of the answer, so the learning signal is stronger. Second, each rare condition gets a copy multiplier based on how rare it is. A rarer condition is copied more times.
+
+A few rules stop the copying from going too far. The multiplier is capped at eight, so no class grows without limit. When one sample has more than one rare condition, the multiplier is the largest one, not the product. The copies are spread over all crops that contain the condition, so a single image is not repeated too many times. The validation and test sets are copied without any change, so the evaluation stays honest.
+
+\begin{table}[H]
+\centering
+\caption{Oversampling of the rare conditions in the training split}
+\begin{tabular}{llccc}
+\toprule
+Code & Condition & Multiplier & Teeth before & Teeth after \\
+\midrule
+\texttt{Dc}  & crown destruction      & 7.89 & 174 & 981 \\
+\texttt{Im}  & implant                & 8.00 & 199 & 1081 \\
+\texttt{P}   & pontic                 & 4.00 & 362 & 1178 \\
+\texttt{Rr}  & residual root          & 3.97 & 332 & 1109 \\
+\texttt{M3f} & developing third molar & 3.34 & 398 & 959 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+After balancing, the training split grows from 3695 to 5817 rows. This is about 57\% more rows. The validation and test splits do not change. Table~\ref{tab:balance-rows} shows the sample counts.
+
+\begin{table}[H]
+\centering
+\caption{Sample counts before and after balancing}
+\label{tab:balance-rows}
+\begin{tabular}{lcc}
+\toprule
+Split & Before balancing & After balancing \\
+\midrule
+Train & 3695 & 5817 \\
+Validation & 460 & 460 \\
+Test & 465 & 465 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The balanced training set is kept as a separate option. Later experiments can train on the original training split or on the balanced one, and then compare the two.
+
+
+\section{Prepared Outputs for Later Model Experiments}
+
+The common dataset is model-independent. After it is validated, the conversion script writes the same data into model-specific folders. This keeps the source data fixed while allowing later experiments with different VLM families.
+
+At the current stage, converted files are prepared for Qwen, LLaVA, InternVL, Phi, and PaliGemma. Each converted folder keeps the same train, validation, and test counts: 3695 training samples, 460 validation samples, and 465 test samples. This makes later comparison easier because the models can be trained or tested on the same split.
+
+The conversion step changes only the outer data format. For example, Qwen uses a message format with an image list, LLaVA uses multimodal chat-style messages, InternVL uses conversation-style rows, Phi uses a prompt and response format, and PaliGemma uses prefix and suffix fields. The image paths, target report content, split names, and metadata still come from the common dataset.
+
+This report currently stops at the data preparation stage. Model training, model comparison, and final result analysis are planned for the next stage. The prepared dataset can later be used to compare VLM report outputs with Faster R-CNN-style detection results, but that experiment has not been completed yet.
+
+\chapter{Experimental Setup}
+
+Model training and evaluation are the next stage of the thesis. The training scripts and the evaluation script are already prepared, so this chapter describes the planned setup. No model has been trained yet, and no results are reported here.
+
+\section{Training Setup}
+
+Five VLM families are planned for training: Qwen, LLaVA, InternVL, Phi, and PaliGemma. All of them use the same training settings. This is done on purpose, so the later comparison between models is fair. Only the model name, the output folder, and the image resolution option change between models.
+
+The models are fine-tuned with LoRA. LoRA trains a small number of extra weights and keeps the base model mostly frozen. This is cheaper and fits on a single GPU. On a 24~GB RTX 3090, the base model is loaded in 4-bit, which is the QLoRA setting, to save memory. On a 40~GB A100, the model is trained in bf16 without quantization. The hyperparameters are the same in both cases, so the two machines give comparable runs.
+
+\begin{table}[H]
+\centering
+\caption{Training hyperparameters shared by all five models}
+\begin{tabular}{ll}
+\toprule
+Setting & Value \\
+\midrule
+Fine-tuning method      & LoRA (QLoRA 4-bit on the RTX 3090) \\
+LoRA rank               & 8 \\
+LoRA alpha              & 32 \\
+LoRA dropout            & 0.1 \\
+Target modules          & all linear layers \\
+Vision encoder          & frozen \\
+Epochs                  & 2 (best checkpoint chosen by validation) \\
+Learning rate           & 1e-4 \\
+LR scheduler            & cosine \\
+Warmup ratio            & 0.05 \\
+Weight decay            & 0.1 \\
+Batch size per device   & 1 \\
+Gradient accumulation   & 16 (effective batch size 16) \\
+Max sequence length     & 4096 \\
+Max image pixels        & 802{,}816 \\
+Eval / save interval    & every 100 steps \\
+Random seed             & 924 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The best checkpoint is not always the last one. The training saves a checkpoint every 100 steps and checks the validation set. The checkpoint with the best validation score is then used for the final test. This avoids picking a model that has already started to overfit.
+
+\section{Evaluation Metrics}
+
+The evaluation uses one script, \texttt{eval\_report.py}, for all models. It compares the predicted JSON report with the gold JSON report. The basic unit is one tooth in one region. For each unit, the script checks the FDI number and the condition label.
+
+The metrics are grouped in a simple way. The detection metrics ask if the model finds the right teeth. The classification metrics look at whether a found tooth has the correct condition. The joint metrics combine the two. The last group checks the text quality and the JSON format. Table~\ref{tab:eval-metrics} lists the groups.
+
+\begin{table}[H]
+\centering
+\caption{Groups of evaluation metrics}
+\label{tab:eval-metrics}
+\begin{tabular}{lp{8.5cm}}
+\toprule
+Group & What it measures \\
+\midrule
+Detection      & Whether the right teeth are found by FDI number: precision, recall, F1, plus the rate of invented teeth and missed teeth. \\
+Classification & For a tooth that is found, whether the condition is correct: per-condition and averaged precision, recall, and F1. \\
+Joint          & Whole-tooth accuracy, where the FDI number and the condition are both correct, and the exact report match rate. \\
+Generation     & The share of outputs that are valid JSON, and the ROUGE-L score on the comment and summary text. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These metrics cover both parts of the task. The detection and classification metrics show if the model finds the correct dental findings. The generation metrics show if the output is valid and readable. The detection and classification metrics can also be used for the Faster R-CNN baseline, so the recognition part can be compared on the same ground.
+
+\chapter{Results}
+
+No model results are reported at this stage. The current result is the completed PAN924-based VLM report dataset and its validated converted formats.
+% --- Appendix starts ---
+\appendix
+\chapter{Prompts}\label{app:prompts}
+
+\section*{Prompt Template for Full Panoramic Report}\label{app:full-report-prompt}
+
+\begin{lstlisting}[style=mystyle,numbers=none, caption={Prompt template for full panoramic dental report},label={lst:full-report-prompt}]
+<image>
+This is a full panoramic dental radiograph.
+Divide the image into four image-space regions: image_upper_left, image_upper_right, image_lower_left, and image_lower_right.
+For each region, list the visible annotated teeth using FDI notation and report each tooth condition.
+Return only valid JSON with this schema:
+{"regions":{"image_upper_left":{"teeth":[{"fdi":"string","condition":"string","condition_name":"string"}],"comment":"string"},"image_upper_right":{"teeth":[{"fdi":"string","condition":"string","condition_name":"string"}],"comment":"string"},"image_lower_left":{"teeth":[{"fdi":"string","condition":"string","condition_name":"string"}],"comment":"string"},"image_lower_right":{"teeth":[{"fdi":"string","condition":"string","condition_name":"string"}],"comment":"string"}},"summary":"string"}
+\end{lstlisting}
+
+\section*{Prompt Template for Regional Report}\label{app:regional-report-prompt}
+
+\begin{lstlisting}[style=mystyle,numbers=none, caption={Prompt template for regional dental report},label={lst:regional-report-prompt}]
+<image>
+This is the {region} crop of a panoramic dental radiograph.
+Identify the visible annotated teeth using FDI notation and report each tooth condition.
+Return only valid JSON with this schema:
+{"region":"string","teeth":[{"fdi":"string","condition":"string","condition_name":"string"}],"comment":"string"}
+\end{lstlisting}
+
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+
+
+
+\end{document}

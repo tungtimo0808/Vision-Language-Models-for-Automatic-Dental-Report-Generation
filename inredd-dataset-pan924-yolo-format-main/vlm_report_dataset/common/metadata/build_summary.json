@@ -1,0 +1,26 @@
+{
+  "input_json": "annotations/dataset_final_v2.json",
+  "output_dir": "vlm_report_dataset/common",
+  "source_images": 924,
+  "views_per_image": 5,
+  "total_samples": 4620,
+  "samples_by_split": {
+    "train": 3695,
+    "val": 460,
+    "test": 465
+  },
+  "image_split_counts": {
+    "train": 739,
+    "val": 92,
+    "test": 93
+  },
+  "overlap_x": 0.1,
+  "overlap_y": 0.1,
+  "comment_source": "template",
+  "label_remap": {
+    "Ri": "Te",
+    "RiM": "Te",
+    "TeM": "Te",
+    "I": "M3i"
+  }
+}

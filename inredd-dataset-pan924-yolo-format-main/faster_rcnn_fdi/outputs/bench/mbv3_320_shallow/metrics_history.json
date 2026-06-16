@@ -1,0 +1,112 @@
+{
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 1.650357,
+      "val_loss": 1.530085,
+      "val_precision": 0.6075,
+      "val_recall": 0.517021,
+      "val_f1": 0.558621,
+      "val_tp": 486,
+      "val_fp": 314,
+      "val_fn": 454,
+      "time": "2026-04-19 14:22:10"
+    },
+    {
+      "epoch": 2,
+      "train_loss": 1.611523,
+      "val_loss": 1.567769,
+      "val_precision": 0.644989,
+      "val_recall": 0.643617,
+      "val_f1": 0.644302,
+      "val_tp": 605,
+      "val_fp": 333,
+      "val_fn": 335,
+      "time": "2026-04-19 14:24:03"
+    },
+    {
+      "epoch": 3,
+      "train_loss": 1.597304,
+      "val_loss": 1.647451,
+      "val_precision": 0.693989,
+      "val_recall": 0.675532,
+      "val_f1": 0.684636,
+      "val_tp": 635,
+      "val_fp": 280,
+      "val_fn": 305,
+      "time": "2026-04-19 14:25:34"
+    },
+    {
+      "epoch": 4,
+      "train_loss": 1.529232,
+      "val_loss": 1.703291,
+      "val_precision": 0.692714,
+      "val_recall": 0.697872,
+      "val_f1": 0.695284,
+      "val_tp": 656,
+      "val_fp": 291,
+      "val_fn": 284,
+      "time": "2026-04-19 14:27:13"
+    },
+    {
+      "epoch": 5,
+      "train_loss": 1.489312,
+      "val_loss": 1.88899,
+      "val_precision": 0.702505,
+      "val_recall": 0.715957,
+      "val_f1": 0.709168,
+      "val_tp": 673,
+      "val_fp": 285,
+      "val_fn": 267,
+      "time": "2026-04-19 14:28:55"
+    },
+    {
+      "epoch": 6,
+      "train_loss": 1.435663,
+      "val_loss": 1.812163,
+      "val_precision": 0.710921,
+      "val_recall": 0.706383,
+      "val_f1": 0.708645,
+      "val_tp": 664,
+      "val_fp": 270,
+      "val_fn": 276,
+      "time": "2026-04-19 14:30:40"
+    },
+    {
+      "epoch": 7,
+      "train_loss": 1.39342,
+      "val_loss": 1.899786,
+      "val_precision": 0.745928,
+      "val_recall": 0.730851,
+      "val_f1": 0.738313,
+      "val_tp": 687,
+      "val_fp": 234,
+      "val_fn": 253,
+      "time": "2026-04-19 14:32:25"
+    },
+    {
+      "epoch": 8,
+      "train_loss": 1.346134,
+      "val_loss": 1.896708,
+      "val_precision": 0.736842,
+      "val_recall": 0.744681,
+      "val_f1": 0.740741,
+      "val_tp": 700,
+      "val_fp": 250,
+      "val_fn": 240,
+      "time": "2026-04-19 14:34:08"
+    },
+    {
+      "epoch": 9,
+      "train_loss": 1.294468,
+      "val_loss": 1.960028,
+      "val_precision": 0.750779,
+      "val_recall": 0.769149,
+      "val_f1": 0.759853,
+      "val_tp": 723,
+      "val_fp": 240,
+      "val_fn": 217,
+      "time": "2026-04-19 14:35:52"
+    }
+  ]
+}

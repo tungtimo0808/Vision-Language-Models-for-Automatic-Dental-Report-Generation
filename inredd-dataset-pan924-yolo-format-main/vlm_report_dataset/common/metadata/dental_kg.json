@@ -1,0 +1,727 @@
+{
+  "source": "vlm_report_dataset/common/train.jsonl (full_quadrant_report rows only)",
+  "n_images": 739,
+  "regions": [
+    "image_upper_left",
+    "image_upper_right",
+    "image_lower_left",
+    "image_lower_right"
+  ],
+  "conditions": {
+    "H": {
+      "name": "healthy",
+      "description": "No annotated abnormal dental condition.",
+      "tooth_occurrences": 8361,
+      "image_prevalence": 608,
+      "image_prevalence_pct": 82.27,
+      "rarity": "dominant",
+      "valid_fdi": [
+        "32",
+        "42",
+        "41",
+        "43",
+        "31",
+        "33",
+        "13",
+        "23",
+        "34",
+        "44",
+        "12",
+        "22",
+        "45",
+        "11",
+        "21",
+        "35",
+        "14",
+        "15",
+        "25",
+        "24",
+        "17",
+        "27",
+        "47",
+        "18",
+        "16",
+        "26",
+        "37",
+        "28",
+        "38",
+        "46",
+        "36",
+        "48"
+      ],
+      "n_valid_fdi": 32,
+      "regions": {
+        "image_lower_right": 2502,
+        "image_lower_left": 2305,
+        "image_upper_left": 1816,
+        "image_upper_right": 1738
+      },
+      "top_cooccur": {
+        "R": 1566,
+        "Te": 347,
+        "M3i": 223,
+        "C": 197,
+        "M3f": 141
+      }
+    },
+    "R": {
+      "name": "restored",
+      "description": "A restoration is annotated for this tooth.",
+      "tooth_occurrences": 5227,
+      "image_prevalence": 581,
+      "image_prevalence_pct": 78.62,
+      "rarity": "dominant",
+      "valid_fdi": [
+        "47",
+        "26",
+        "16",
+        "27",
+        "17",
+        "37",
+        "46",
+        "35",
+        "36",
+        "45",
+        "25",
+        "15",
+        "34",
+        "24",
+        "44",
+        "11",
+        "21",
+        "22",
+        "14",
+        "12",
+        "23",
+        "38",
+        "13",
+        "48",
+        "18",
+        "28",
+        "33",
+        "43",
+        "41",
+        "31",
+        "42",
+        "32"
+      ],
+      "n_valid_fdi": 32,
+      "regions": {
+        "image_upper_right": 1551,
+        "image_upper_left": 1437,
+        "image_lower_left": 1139,
+        "image_lower_right": 1100
+      },
+      "top_cooccur": {
+        "H": 1566,
+        "Te": 468,
+        "CpuM": 192,
+        "C": 186,
+        "M3i": 170
+      }
+    },
+    "Te": {
+      "name": "endodontic treatment",
+      "description": "Endodontic treatment is annotated for this tooth.",
+      "tooth_occurrences": 707,
+      "image_prevalence": 297,
+      "image_prevalence_pct": 40.19,
+      "rarity": "common",
+      "valid_fdi": [
+        "21",
+        "46",
+        "45",
+        "22",
+        "11",
+        "25",
+        "16",
+        "12",
+        "15",
+        "13",
+        "36",
+        "14",
+        "37",
+        "26",
+        "27",
+        "17",
+        "35",
+        "24",
+        "47",
+        "34",
+        "23",
+        "44",
+        "38",
+        "48",
+        "33",
+        "43",
+        "18",
+        "41",
+        "31",
+        "42",
+        "32"
+      ],
+      "n_valid_fdi": 31,
+      "regions": {
+        "image_upper_left": 238,
+        "image_upper_right": 208,
+        "image_lower_left": 142,
+        "image_lower_right": 119
+      },
+      "top_cooccur": {
+        "R": 468,
+        "H": 347,
+        "CpuM": 87,
+        "C": 49,
+        "Di": 45
+      }
+    },
+    "CpuM": {
+      "name": "prosthetic crown",
+      "description": "A prosthetic crown is annotated.",
+      "tooth_occurrences": 308,
+      "image_prevalence": 128,
+      "image_prevalence_pct": 17.32,
+      "rarity": "uncommon",
+      "valid_fdi": [
+        "25",
+        "12",
+        "21",
+        "15",
+        "24",
+        "11",
+        "22",
+        "14",
+        "23",
+        "36",
+        "16",
+        "13",
+        "45",
+        "34",
+        "35",
+        "46",
+        "37",
+        "17",
+        "44",
+        "26",
+        "27",
+        "28",
+        "48",
+        "38",
+        "47",
+        "43",
+        "33",
+        "18"
+      ],
+      "n_valid_fdi": 28,
+      "regions": {
+        "image_upper_right": 117,
+        "image_upper_left": 112,
+        "image_lower_right": 45,
+        "image_lower_left": 34
+      },
+      "top_cooccur": {
+        "R": 192,
+        "H": 96,
+        "Te": 87,
+        "P": 51,
+        "Im": 16
+      }
+    },
+    "C": {
+      "name": "caries",
+      "description": "Caries is annotated for this tooth.",
+      "tooth_occurrences": 306,
+      "image_prevalence": 182,
+      "image_prevalence_pct": 24.63,
+      "rarity": "uncommon",
+      "valid_fdi": [
+        "33",
+        "32",
+        "13",
+        "15",
+        "27",
+        "12",
+        "21",
+        "23",
+        "26",
+        "45",
+        "43",
+        "42",
+        "34",
+        "47",
+        "37",
+        "22",
+        "16",
+        "35",
+        "31",
+        "24",
+        "41",
+        "36",
+        "11",
+        "44",
+        "25",
+        "48",
+        "17",
+        "18",
+        "28",
+        "46",
+        "14",
+        "38"
+      ],
+      "n_valid_fdi": 32,
+      "regions": {
+        "image_lower_right": 85,
+        "image_upper_right": 79,
+        "image_upper_left": 74,
+        "image_lower_left": 68
+      },
+      "top_cooccur": {
+        "H": 197,
+        "R": 186,
+        "Te": 49,
+        "M3i": 20,
+        "Rr": 19
+      }
+    },
+    "M3i": {
+      "name": "impacted third molar",
+      "description": "An impacted third molar is annotated.",
+      "tooth_occurrences": 243,
+      "image_prevalence": 121,
+      "image_prevalence_pct": 16.37,
+      "rarity": "uncommon",
+      "valid_fdi": [
+        "38",
+        "48",
+        "18",
+        "28",
+        "27",
+        "23",
+        "41"
+      ],
+      "n_valid_fdi": 7,
+      "regions": {
+        "image_lower_right": 63,
+        "image_upper_right": 62,
+        "image_upper_left": 59,
+        "image_lower_left": 59
+      },
+      "top_cooccur": {
+        "H": 223,
+        "R": 170,
+        "Te": 25,
+        "C": 20,
+        "Di": 9
+      }
+    },
+    "Di": {
+      "name": "incisal or occlusal wear",
+      "description": "Incisal or occlusal wear is annotated.",
+      "tooth_occurrences": 232,
+      "image_prevalence": 104,
+      "image_prevalence_pct": 14.07,
+      "rarity": "uncommon",
+      "valid_fdi": [
+        "43",
+        "31",
+        "33",
+        "41",
+        "42",
+        "21",
+        "32",
+        "11",
+        "22",
+        "13",
+        "23",
+        "12",
+        "48",
+        "45",
+        "46",
+        "34",
+        "15"
+      ],
+      "n_valid_fdi": 17,
+      "regions": {
+        "image_lower_left": 88,
+        "image_lower_right": 81,
+        "image_upper_right": 34,
+        "image_upper_left": 29
+      },
+      "top_cooccur": {
+        "R": 129,
+        "H": 124,
+        "Te": 45,
+        "CpuM": 15,
+        "C": 12
+      }
+    },
+    "M3f": {
+      "name": "developing third molar",
+      "description": "A developing third molar is annotated.",
+      "tooth_occurrences": 159,
+      "image_prevalence": 47,
+      "image_prevalence_pct": 6.36,
+      "rarity": "uncommon",
+      "valid_fdi": [
+        "28",
+        "48",
+        "18",
+        "38",
+        "47"
+      ],
+      "n_valid_fdi": 5,
+      "regions": {
+        "image_upper_right": 49,
+        "image_upper_left": 46,
+        "image_lower_left": 34,
+        "image_lower_right": 30
+      },
+      "top_cooccur": {
+        "H": 141,
+        "R": 72,
+        "C": 14,
+        "Te": 10,
+        "CpuM": 1
+      }
+    },
+    "Rr": {
+      "name": "residual root",
+      "description": "A residual root is annotated for this tooth.",
+      "tooth_occurrences": 112,
+      "image_prevalence": 64,
+      "image_prevalence_pct": 8.66,
+      "rarity": "rare",
+      "valid_fdi": [
+        "38",
+        "18",
+        "28",
+        "48",
+        "15",
+        "47",
+        "27",
+        "21",
+        "17",
+        "12",
+        "25",
+        "45",
+        "23",
+        "16",
+        "22",
+        "37",
+        "36",
+        "24",
+        "13",
+        "14",
+        "31",
+        "41",
+        "33",
+        "11",
+        "26",
+        "34",
+        "42"
+      ],
+      "n_valid_fdi": 27,
+      "regions": {
+        "image_upper_left": 37,
+        "image_upper_right": 34,
+        "image_lower_right": 21,
+        "image_lower_left": 20
+      },
+      "top_cooccur": {
+        "R": 50,
+        "H": 50,
+        "C": 19,
+        "Te": 13,
+        "Dc": 8
+      }
+    },
+    "P": {
+      "name": "pontic",
+      "description": "A pontic is annotated.",
+      "tooth_occurrences": 106,
+      "image_prevalence": 48,
+      "image_prevalence_pct": 6.5,
+      "rarity": "rare",
+      "valid_fdi": [
+        "25",
+        "15",
+        "14",
+        "22",
+        "45",
+        "35",
+        "24",
+        "37",
+        "27",
+        "12",
+        "16",
+        "21",
+        "47",
+        "26",
+        "11",
+        "23",
+        "34",
+        "46",
+        "36",
+        "13",
+        "41",
+        "48"
+      ],
+      "n_valid_fdi": 22,
+      "regions": {
+        "image_upper_right": 39,
+        "image_upper_left": 36,
+        "image_lower_right": 16,
+        "image_lower_left": 15
+      },
+      "top_cooccur": {
+        "R": 72,
+        "CpuM": 51,
+        "H": 34,
+        "Te": 33,
+        "Di": 4
+      }
+    },
+    "Im": {
+      "name": "implant",
+      "description": "An implant is annotated at this tooth position.",
+      "tooth_occurrences": 73,
+      "image_prevalence": 27,
+      "image_prevalence_pct": 3.65,
+      "rarity": "rare",
+      "valid_fdi": [
+        "45",
+        "14",
+        "37",
+        "35",
+        "16",
+        "25",
+        "17",
+        "24",
+        "18",
+        "21",
+        "23",
+        "15",
+        "34",
+        "26",
+        "47",
+        "38",
+        "13",
+        "28",
+        "36",
+        "27",
+        "42",
+        "44",
+        "32",
+        "46",
+        "22",
+        "12",
+        "48"
+      ],
+      "n_valid_fdi": 27,
+      "regions": {
+        "image_upper_left": 24,
+        "image_upper_right": 18,
+        "image_lower_right": 17,
+        "image_lower_left": 14
+      },
+      "top_cooccur": {
+        "R": 41,
+        "H": 26,
+        "Te": 20,
+        "CpuM": 16,
+        "Di": 8
+      }
+    },
+    "Dc": {
+      "name": "crown destruction",
+      "description": "Crown destruction is annotated.",
+      "tooth_occurrences": 56,
+      "image_prevalence": 34,
+      "image_prevalence_pct": 4.6,
+      "rarity": "rare",
+      "valid_fdi": [
+        "37",
+        "12",
+        "25",
+        "41",
+        "24",
+        "22",
+        "48",
+        "16",
+        "23",
+        "13",
+        "35",
+        "18",
+        "17",
+        "46",
+        "36",
+        "15",
+        "38",
+        "33",
+        "34",
+        "42",
+        "21",
+        "28",
+        "31",
+        "27"
+      ],
+      "n_valid_fdi": 24,
+      "regions": {
+        "image_upper_left": 20,
+        "image_upper_right": 15,
+        "image_lower_right": 13,
+        "image_lower_left": 8
+      },
+      "top_cooccur": {
+        "R": 37,
+        "H": 22,
+        "Te": 12,
+        "Rr": 8,
+        "C": 8
+      }
+    }
+  },
+  "fdi_to_region": {
+    "11": {
+      "image_upper_left": 496,
+      "image_upper_right": 22
+    },
+    "12": {
+      "image_upper_left": 526,
+      "image_upper_right": 2,
+      "image_lower_left": 1
+    },
+    "13": {
+      "image_upper_left": 569,
+      "image_upper_right": 2
+    },
+    "14": {
+      "image_upper_left": 468,
+      "image_upper_right": 3,
+      "image_lower_left": 1
+    },
+    "15": {
+      "image_upper_left": 501,
+      "image_upper_right": 3,
+      "image_lower_left": 1
+    },
+    "16": {
+      "image_upper_left": 482,
+      "image_upper_right": 2,
+      "image_lower_left": 1
+    },
+    "17": {
+      "image_upper_left": 471,
+      "image_upper_right": 1
+    },
+    "18": {
+      "image_upper_left": 316,
+      "image_upper_right": 3,
+      "image_lower_left": 1
+    },
+    "21": {
+      "image_upper_right": 523,
+      "image_upper_left": 16
+    },
+    "22": {
+      "image_upper_right": 531,
+      "image_upper_left": 7,
+      "image_lower_right": 1
+    },
+    "23": {
+      "image_upper_right": 547,
+      "image_upper_left": 2,
+      "image_lower_right": 1
+    },
+    "24": {
+      "image_upper_right": 452,
+      "image_upper_left": 3
+    },
+    "25": {
+      "image_upper_right": 507,
+      "image_upper_left": 5
+    },
+    "26": {
+      "image_upper_right": 465
+    },
+    "27": {
+      "image_upper_right": 507,
+      "image_upper_left": 2,
+      "image_lower_right": 1
+    },
+    "28": {
+      "image_upper_right": 297,
+      "image_upper_left": 2,
+      "image_lower_right": 1
+    },
+    "31": {
+      "image_lower_right": 557,
+      "image_lower_left": 39
+    },
+    "32": {
+      "image_lower_right": 599,
+      "image_upper_left": 1,
+      "image_upper_right": 1
+    },
+    "33": {
+      "image_lower_right": 620,
+      "image_upper_right": 2
+    },
+    "34": {
+      "image_lower_right": 561,
+      "image_lower_left": 2
+    },
+    "35": {
+      "image_lower_right": 519,
+      "image_lower_left": 1
+    },
+    "36": {
+      "image_lower_right": 360
+    },
+    "37": {
+      "image_lower_right": 422,
+      "image_upper_right": 7
+    },
+    "38": {
+      "image_lower_right": 295,
+      "image_upper_right": 66,
+      "image_upper_left": 2,
+      "image_lower_left": 1
+    },
+    "41": {
+      "image_lower_left": 459,
+      "image_lower_right": 146,
+      "image_upper_left": 1
+    },
+    "42": {
+      "image_lower_left": 600,
+      "image_lower_right": 5,
+      "image_upper_left": 1
+    },
+    "43": {
+      "image_lower_left": 618,
+      "image_upper_left": 1
+    },
+    "44": {
+      "image_lower_left": 538,
+      "image_lower_right": 1
+    },
+    "45": {
+      "image_lower_left": 562,
+      "image_lower_right": 3,
+      "image_upper_left": 1
+    },
+    "46": {
+      "image_lower_left": 385
+    },
+    "47": {
+      "image_lower_left": 465,
+      "image_upper_left": 9
+    },
+    "48": {
+      "image_lower_left": 251,
+      "image_upper_left": 46,
+      "image_upper_right": 1
+    }
+  }
+}

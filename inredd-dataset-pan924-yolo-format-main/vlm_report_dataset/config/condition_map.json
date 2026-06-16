@@ -1,0 +1,50 @@
+{
+  "H": {
+    "name": "healthy",
+    "description": "No annotated abnormal dental condition."
+  },
+  "C": {
+    "name": "caries",
+    "description": "Caries is annotated for this tooth."
+  },
+  "R": {
+    "name": "restored",
+    "description": "A restoration is annotated for this tooth."
+  },
+  "Te": {
+    "name": "endodontic treatment",
+    "description": "Endodontic treatment is annotated for this tooth."
+  },
+  "Im": {
+    "name": "implant",
+    "description": "An implant is annotated at this tooth position."
+  },
+  "Rr": {
+    "name": "residual root",
+    "description": "A residual root is annotated for this tooth."
+  },
+  "M3i": {
+    "name": "impacted third molar",
+    "description": "An impacted third molar is annotated."
+  },
+  "M3f": {
+    "name": "developing third molar",
+    "description": "A developing third molar is annotated."
+  },
+  "CpuM": {
+    "name": "prosthetic crown",
+    "description": "A prosthetic crown is annotated."
+  },
+  "Dc": {
+    "name": "crown destruction",
+    "description": "Crown destruction is annotated."
+  },
+  "Di": {
+    "name": "incisal or occlusal wear",
+    "description": "Incisal or occlusal wear is annotated."
+  },
+  "P": {
+    "name": "pontic",
+    "description": "A pontic is annotated."
+  }
+}

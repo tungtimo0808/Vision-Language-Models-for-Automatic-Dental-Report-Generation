@@ -1,0 +1,10 @@
+run_name,architecture,depth_name,trainable_backbone_layers,min_size,max_size,status,runtime_sec,best_epoch,best_val_loss,test_precision,test_recall,test_f1,test_macro_f1,test_weighted_f1,test_map_50,test_map_50_95,output_dir
+mbv3_320_shallow,fasterrcnn_mobilenet_v3_large_320_fpn,shallow,1,512,768,ok,3747.68,29,2.736814,0.576262,0.713687,0.637654,0.409385,0.629115,0.302016,0.127795,faster_rcnn_disease/outputs/bench/mbv3_320_shallow
+mbv3_320_deep,fasterrcnn_mobilenet_v3_large_320_fpn,deep,3,512,768,ok,3499.21,25,2.205756,0.702536,0.793296,0.745162,0.444762,0.74271,0.35999,0.18417,faster_rcnn_disease/outputs/bench/mbv3_320_deep
+mbv3_320_full,fasterrcnn_mobilenet_v3_large_320_fpn,full,5,512,768,ok,4000.05,27,2.26185,0.746778,0.809358,0.77681,0.50565,0.77069,0.409854,0.187329,faster_rcnn_disease/outputs/bench/mbv3_320_full
+mbv3_large_shallow,fasterrcnn_mobilenet_v3_large_fpn,shallow,1,512,768,ok,4071.99,33,2.862865,0.543798,0.697975,0.611315,0.395763,0.601941,0.286977,0.112834,faster_rcnn_disease/outputs/bench/mbv3_large_shallow
+mbv3_large_deep,fasterrcnn_mobilenet_v3_large_fpn,deep,3,512,768,ok,3657.45,27,2.336625,0.698417,0.81669,0.752937,0.447019,0.745775,0.370348,0.17123,faster_rcnn_disease/outputs/bench/mbv3_large_deep
+mbv3_large_full,fasterrcnn_mobilenet_v3_large_fpn,full,5,512,768,ok,4436.24,31,2.280564,0.698389,0.832751,0.759675,0.508714,0.756634,0.426001,0.197448,faster_rcnn_disease/outputs/bench/mbv3_large_full
+resnet50_shallow,fasterrcnn_resnet50_fpn,shallow,1,512,768,ok,5044.56,29,0.821911,0.772054,0.910615,0.83563,0.58915,0.827581,0.56501,0.293683,faster_rcnn_disease/outputs/bench/resnet50_shallow
+resnet50_deep,fasterrcnn_resnet50_fpn,deep,3,512,768,ok,5220.28,27,0.742937,0.815461,0.913408,0.86166,0.595536,0.859265,0.57389,0.313025,faster_rcnn_disease/outputs/bench/resnet50_deep
+resnet50_full,fasterrcnn_resnet50_fpn,full,5,512,768,ok,3766.44,16,0.707237,0.808733,0.918296,0.860039,0.601048,0.864049,0.595746,0.301952,faster_rcnn_disease/outputs/bench/resnet50_full

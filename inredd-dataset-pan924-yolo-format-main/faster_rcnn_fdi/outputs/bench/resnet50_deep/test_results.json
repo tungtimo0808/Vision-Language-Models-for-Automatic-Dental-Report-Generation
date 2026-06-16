@@ -1,0 +1,30 @@
+{
+  "best_epoch": 9,
+  "best_val_loss": 0.588496,
+  "test_loss": 0.598937,
+  "test_detection": {
+    "precision": 0.818344,
+    "recall": 0.964323,
+    "f1": 0.885356,
+    "tp": 2757,
+    "fp": 612,
+    "fn": 102,
+    "processed_batches": 119
+  },
+  "test_map": {
+    "map_50_95": 0.544481,
+    "map_50": 0.927377,
+    "processed_images": 119,
+    "available": true
+  },
+  "eval_config": {
+    "score_threshold": 0.3,
+    "iou_threshold": 0.5,
+    "test_max_batches": 0
+  },
+  "early_stopping": {
+    "enabled": true,
+    "patience": 8,
+    "min_delta": 0.0005
+  }
+}

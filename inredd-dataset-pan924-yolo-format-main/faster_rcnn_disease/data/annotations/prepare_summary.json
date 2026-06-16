@@ -1,0 +1,49 @@
+{
+  "task": "disease_detection",
+  "num_disease_classes": 12,
+  "disease_classes": [
+    "H",
+    "R",
+    "Te",
+    "CpuM",
+    "M3i",
+    "M3f",
+    "Di",
+    "C",
+    "Rr",
+    "P",
+    "Im",
+    "Dc"
+  ],
+  "disease_remap": {
+    "RiM": "Te",
+    "Ri": "Te",
+    "TeM": "Te",
+    "I": "M3i"
+  },
+  "keep_empty_images": false,
+  "train_images": 557,
+  "val_images": 130,
+  "test_images": 120,
+  "train_annotations": 13631,
+  "val_annotations": 3072,
+  "test_annotations": 2864,
+  "disease_counts_all_splits": {
+    "H": 10544,
+    "R": 6312,
+    "Te": 823,
+    "CpuM": 360,
+    "M3i": 296,
+    "M3f": 191,
+    "Di": 307,
+    "C": 385,
+    "Rr": 124,
+    "P": 100,
+    "Im": 67,
+    "Dc": 58
+  },
+  "dropped_invalid_bbox": 0,
+  "dropped_duplicate_same_fdi": 466,
+  "dropped_unknown_disease": 0,
+  "dropped_empty_images": 117
+}

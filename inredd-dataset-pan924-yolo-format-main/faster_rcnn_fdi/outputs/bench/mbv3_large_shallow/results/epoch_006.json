@@ -1,0 +1,21 @@
+{
+  "epoch": 6,
+  "loss": {
+    "train": 1.50124,
+    "val": 1.973391
+  },
+  "val_detection": {
+    "precision": 0.652855,
+    "recall": 0.754255,
+    "f1": 0.699901,
+    "tp": 709,
+    "fp": 377,
+    "fn": 231,
+    "processed_batches": 40
+  },
+  "eval_config": {
+    "score_threshold": 0.3,
+    "iou_threshold": 0.5
+  },
+  "time": "2026-04-19 15:28:00"
+}

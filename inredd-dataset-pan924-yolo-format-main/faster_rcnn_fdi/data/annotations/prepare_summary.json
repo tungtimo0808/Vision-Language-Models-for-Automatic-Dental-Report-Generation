@@ -1,0 +1,13 @@
+{
+  "keep_empty_images": false,
+  "train_images": 557,
+  "val_images": 130,
+  "test_images": 120,
+  "train_annotations": 13631,
+  "val_annotations": 3072,
+  "test_annotations": 2864,
+  "dropped_invalid_bbox": 0,
+  "dropped_duplicate_same_fdi": 466,
+  "dropped_unknown_label": 0,
+  "dropped_empty_images": 117
+}

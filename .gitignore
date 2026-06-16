@@ -1,0 +1,47 @@
+# ===== Virtual environments / package managers =====
+.conda/
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+
+# ===== Secrets =====
+.env
+*.env
+
+# ===== Images (heavy dataset) =====
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.tif
+*.tiff
+*.gif
+*.webp
+
+# ===== Model weights / checkpoints (heavy, >100MB) =====
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+*.onnx
+*.bin
+*.h5
+
+# ===== Large data files =====
+*.jsonl
+
+# ===== LaTeX build artifacts =====
+*.aux
+*.bbl
+*.blg
+*.lof
+*.log
+*.lot
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk

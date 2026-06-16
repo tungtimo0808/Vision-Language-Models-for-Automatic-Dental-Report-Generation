@@ -1,0 +1,6 @@
+<image>
+This is a full panoramic dental radiograph.
+Divide the image into four image-space regions: image_upper_left, image_upper_right, image_lower_left, and image_lower_right.
+For each region, list the visible annotated teeth using FDI notation and report each tooth condition.
+Return only valid JSON with this schema:
+{"regions":{"image_upper_left":{"teeth":[{"fdi":"string","condition":"string","condition_name":"string"}],"comment":"string"},"image_upper_right":{"teeth":[{"fdi":"string","condition":"string","condition_name":"string"}],"comment":"string"},"image_lower_left":{"teeth":[{"fdi":"string","condition":"string","condition_name":"string"}],"comment":"string"},"image_lower_right":{"teeth":[{"fdi":"string","condition":"string","condition_name":"string"}],"comment":"string"}},"summary":"string"}

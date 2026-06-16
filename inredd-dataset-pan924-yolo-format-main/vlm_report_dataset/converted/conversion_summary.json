@@ -1,0 +1,34 @@
+{
+  "models": {
+    "qwen": {
+      "train": 5817,
+      "val": 460,
+      "test": 465
+    },
+    "llava": {
+      "train": 5817,
+      "val": 460,
+      "test": 465
+    },
+    "internvl": {
+      "train": 5817,
+      "val": 460,
+      "test": 465
+    },
+    "phi": {
+      "train": 5817,
+      "val": 460,
+      "test": 465
+    },
+    "paligemma": {
+      "train": 5817,
+      "val": 460,
+      "test": 465
+    }
+  },
+  "splits": [
+    "train",
+    "val",
+    "test"
+  ]
+}

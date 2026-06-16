@@ -1,0 +1,37 @@
+{
+  "input_json": "annotations/dataset_final_v2.json",
+  "output_dir": "prepared_dataset/pan924_instruction_v2",
+  "macro_rows": 924,
+  "micro_rows": 20033,
+  "skipped_rows": 0,
+  "split_distribution_images": {
+    "train": 737,
+    "test": 95,
+    "val": 92
+  },
+  "disease_distribution_micro": {
+    "M3f": 192,
+    "H": 10665,
+    "R": 6481,
+    "M3i": 304,
+    "CpuM": 384,
+    "Te": 869,
+    "Di": 312,
+    "C": 399,
+    "P": 127,
+    "Im": 90,
+    "Rr": 141,
+    "Dc": 69
+  },
+  "disease_classes_micro": 12,
+  "disease_label_remap": {
+    "RiM": "Te",
+    "Ri": "Te",
+    "TeM": "Te",
+    "I": "M3i"
+  },
+  "expand_width": 1.8,
+  "expand_height": 1.2,
+  "min_crop_size": 32,
+  "max_crop_size": 0
+}

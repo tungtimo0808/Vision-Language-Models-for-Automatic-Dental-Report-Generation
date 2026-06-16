@@ -1,0 +1,15 @@
+{
+  "generator": "clinical_template_v2",
+  "input_dir": "vlm_report_dataset/common/raw",
+  "output_dir": "vlm_report_dataset/common",
+  "splits": [
+    "train",
+    "val",
+    "test"
+  ],
+  "rows_by_split": {
+    "train": 3695,
+    "val": 460,
+    "test": 465
+  }
+}

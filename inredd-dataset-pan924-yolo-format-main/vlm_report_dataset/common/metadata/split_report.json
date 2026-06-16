@@ -1,0 +1,95 @@
+{
+  "seed": 924,
+  "ratios": {
+    "train": 0.8,
+    "val": 0.1,
+    "test": 0.1
+  },
+  "target_image_counts": {
+    "train": 739,
+    "val": 92,
+    "test": 93
+  },
+  "actual_image_counts": {
+    "train": 739,
+    "val": 92,
+    "test": 93
+  },
+  "global_condition_counts": {
+    "NO_ANNOTATED_TEETH": 117,
+    "M3f": 192,
+    "H": 10665,
+    "R": 6481,
+    "M3i": 304,
+    "CpuM": 384,
+    "Te": 869,
+    "Di": 312,
+    "C": 399,
+    "P": 127,
+    "Im": 90,
+    "Rr": 141,
+    "Dc": 69
+  },
+  "split_condition_counts": {
+    "train": {
+      "NO_ANNOTATED_TEETH": 94,
+      "M3f": 159,
+      "H": 8361,
+      "M3i": 243,
+      "R": 5227,
+      "C": 306,
+      "Te": 707,
+      "P": 106,
+      "CpuM": 308,
+      "Im": 73,
+      "Rr": 112,
+      "Dc": 56,
+      "Di": 232
+    },
+    "val": {
+      "H": 1078,
+      "R": 664,
+      "M3f": 18,
+      "CpuM": 37,
+      "Te": 79,
+      "Di": 47,
+      "C": 42,
+      "M3i": 28,
+      "Im": 8,
+      "NO_ANNOTATED_TEETH": 12,
+      "Rr": 15,
+      "Dc": 6,
+      "P": 11
+    },
+    "test": {
+      "R": 590,
+      "H": 1226,
+      "M3i": 33,
+      "M3f": 15,
+      "Di": 33,
+      "Te": 83,
+      "NO_ANNOTATED_TEETH": 11,
+      "C": 51,
+      "CpuM": 39,
+      "Rr": 14,
+      "P": 10,
+      "Im": 9,
+      "Dc": 7
+    }
+  },
+  "bucket_counts": {
+    "C": 81,
+    "CpuM": 54,
+    "Dc": 42,
+    "Di": 75,
+    "H": 18,
+    "Im": 32,
+    "M3f": 58,
+    "M3i": 133,
+    "NO_ANNOTATED_TEETH": 117,
+    "P": 54,
+    "R": 114,
+    "Rr": 59,
+    "Te": 87
+  }
+}
