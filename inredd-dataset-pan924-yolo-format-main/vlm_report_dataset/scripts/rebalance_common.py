@@ -7,8 +7,8 @@ Combines two complementary levers (discussed in the readiness report):
                          condition is a larger fraction of each answer -> a louder learning
                          signal per token, less drowned by the flood of 'H'.
 
-  Method 3 (frequency) : duplicate the rare-condition crops with a KG-derived multiplier
-                         (inverse image-prevalence), so the model SEES the tail more often.
+  Method 3 (frequency) : duplicate the rare-condition crops with an inverse image-prevalence
+                         multiplier, so the model SEES the tail more often.
 
 Oversampling only the regional crops applies both levers at once: the copies are both denser
 and more frequent.
@@ -42,7 +42,7 @@ from collections import Counter, defaultdict
 HERE = os.path.dirname(os.path.abspath(__file__))
 DS = os.path.abspath(os.path.join(HERE, ".."))
 
-# The clear tail (train tooth-occurrence < ~160), per split_report.json / dental_kg.json.
+# The clear tail (train tooth-occurrence < ~160), per split_report.json.
 RARE = ["Dc", "Im", "P", "Rr", "M3f"]
 CAP = 8.0
 SEED = 924
@@ -73,7 +73,7 @@ def gold_conditions(row):
 
 
 def compute_multipliers(regional_rows, cap):
-    """KG-style inverse image-prevalence multiplier per rare condition, capped at `cap`."""
+    """Inverse image-prevalence multiplier per rare condition, capped at `cap`."""
     n = len(regional_rows)
     contains = Counter()
     for r in regional_rows:
@@ -147,7 +147,7 @@ def main():
     summary = {
         "seed": args.seed,
         "cap": args.cap,
-        "method": "regional-only oversampling, KG inverse-prevalence multiplier, MAX-combine, stochastic rounding",
+        "method": "regional-only oversampling, inverse image-prevalence multiplier, MAX-combine, stochastic rounding",
         "rare_conditions": RARE,
         "multipliers": {c: round(mult.get(c, 1.0), 2) for c in RARE},
         "regional_samples_containing": dict(contains),

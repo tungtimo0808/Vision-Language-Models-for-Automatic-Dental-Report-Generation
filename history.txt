@@ -1,186 +1,409 @@
-History of changes and checks
-=============================
+================================================================================
+PROJECT HANDOFF / CODEBASE BRIEFING
+Vision-Language Models for Automatic Dental Report Generation (PAN924)
+================================================================================
+Purpose: a complete, self-contained briefing for an AI coding assistant (e.g.
+Codex) to understand this codebase — what exists, how the pieces connect, the
+exact data schemas, and what is currently being worked on.
+Last updated: 2026-06-18.
 
-Workspace:
-d:\Self\inredd-dataset-pan924-yolo-format-main
+Local repo root:    d:\Self\inredd-dataset-pan924-yolo-format-main
+Actual project dir: inredd-dataset-pan924-yolo-format-main\  (nested ONE level down;
+                    almost everything below lives here unless said otherwise)
+GitHub remote:      https://github.com/tungtimo0808/Vision-Language-Models-for-Automatic-Dental-Report-Generation
+Default branch:     main
+Local tooling py:   .venv\Scripts\python.exe (no torch; used only to run scripts
+                    like generate_notebooks.py). Heavy ML runs on Colab A100.
 
-Main files involved:
-- report.tex
-- references.bib
-- report.pdf
-- USTH.png
-- USTH.jpg
-- Phase1.png
-- phase_1.png
 
-1. Report content update
-------------------------
-- Reworked the report content to match the current VLM dataset pipeline.
-- Kept the original report structure as much as possible.
-- Wrote the content only up to the current data preparation stage.
-- Adjusted the topic framing from a single model direction to a models/comparison direction.
-- Made the text clear that the generated report is only a support output and still needs dentist review.
-- Added the idea that later work can compare VLM report outputs with Faster R-CNN-style detection results.
-- Used simpler B2-level English and avoided overly academic wording.
-- Avoided long, nested sentences where possible.
+================================================================================
+1. GOAL (two task families on 924 panoramic dental X-rays)
+================================================================================
+A) Faster R-CNN object detection (built & trained, NOT the current focus):
+     - FDI task     : detect + label each tooth by FDI number  (32 teeth).
+     - Disease task : detect each tooth + label its condition   (12 classes).
+B) Vision-Language report generation (CURRENT FOCUS):
+     Fine-tune 5 open VLMs (LoRA) to read a panoramic crop and emit a STRUCTURED
+     JSON dental report (per-tooth FDI + condition code + human name + a comment).
+     All 5 models train on identical data and are compared head-to-head.
 
-2. Source-based writing and references
---------------------------------------
-- Added references to official/scientific sources in references.bib.
-- Used IEEE-style bibliography output with numeric citations.
-- Added or kept citations for PAN924, dental panoramic X-ray detection, radiology report generation, VLM work, and medical VLM review material.
-- Changed natbib to numeric mode so it works with IEEEtran bibliography style.
 
-3. Expansion of early report sections
--------------------------------------
-- Expanded the early sections so they are less short and more suitable for a Bachelor-level report.
-- Expanded Background and Motivation.
-- Expanded Problem Statement.
-- Expanded Objectives.
-- Expanded Literature Review.
-- Kept the writing practical, clear, and not too academic.
+================================================================================
+2. DATASET (PAN924) AND LABEL SPACE
+================================================================================
+Source annotations (in annotations/):
+  dataset_final_v2.json        master dataset; input to the VLM builder.
+  mouth_and_teeth_labels.json  raw COCO export, 20 categories (4 supercategories:
+                               Mouth / Natural Teeth / Artificial Teeth / Mix Teeth).
+  teeth_fdi_labels.json        FDI tooth-number labels.
 
-4. Methodology update from Section 2.1.2 onward
------------------------------------------------
-- The user requested that nothing before Section 2.1.2 should be changed.
-- I located Section 2.1.2 at:
-  \subsection{Base Prompt Design for VQA Generation}
-- I rewrote only from that point onward.
-- Renamed the old VQA title to:
-  \subsection{Common Report Schema and Prompt Templates}
-- Removed old pipeline terms such as VQA, AI-Assisted VQA Generation, and GalLens.
-- Replaced the old content with the current real pipeline:
-  - common JSONL report schema
-  - full panoramic report task
-  - regional report task
-  - clinical text generation from ground-truth labels
-  - validation and quality control
-  - final common dataset and label set
-  - converted outputs for later model experiments
-- Clearly stated that the current pipeline does not call an outside model or API to generate labels.
-- Explained that generate_clinical_reports.py only writes comment and summary text.
-- Explained that image path, split, task name, tooth number, condition label, and JSON structure are preserved.
-- Explained that validate_common_dataset.py checks fields, image paths, schemas, labels, and split consistency.
-- Added the validated dataset counts:
-  - 924 unique source images
-  - 4620 total samples
-  - 924 full-image report samples
-  - 3696 regional report samples
-  - train: 3695 samples
-  - validation: 460 samples
-  - test: 465 samples
-- Explained the 12 final condition labels.
-- Explained the label remapping:
-  - Ri -> Te
-  - RiM -> Te
-  - TeM -> Te
-  - I -> M3i
-- Explained that converted outputs were prepared for:
-  - Qwen
-  - LLaVA
-  - InternVL
-  - Phi
-  - PaliGemma
-- Added short placeholder text for Experimental Setup and Results because training/evaluation is not done yet.
+RAW 20 -> CLEAN 12 disease classes (this trips people up; both the detector and
+the VLM pipeline apply the SAME policy):
+  (a) DROP 4 "Mouth" region labels (these are anatomy boxes, NOT per-tooth disease):
+          Ed, De, Me, Mne
+  (b) MERGE 4 raw labels into existing classes (config/disease_label_remap.json):
+          Ri -> Te,  RiM -> Te,  TeM -> Te,  I -> M3i
+  20 - 4 dropped - 4 merged = 12.
 
-5. Pipeline files inspected
----------------------------
-- Read generate_clinical_reports.py to confirm that comments and summaries are generated from fixed PAN924 labels.
-- Read build_5view_common_dataset.py to confirm:
-  - five views per image
-  - image-space regions
-  - 10 percent overlap in crops
-  - stratified group split
-  - common JSONL output
-- Read validate_common_dataset.py to confirm validation behavior.
-- Read convert_dataset.py to confirm the converted model-specific formats.
-- Read prompt templates:
-  - full_report_prompt.txt
-  - regional_report_prompt.txt
-- Read metadata files:
-  - build_summary.json
-  - split_report.json
-  - validation_report.json
-  - clinical_generation_summary.json
-  - conversion_summary.json
+The 12 canonical disease/condition codes and their human names
+(vlm_report_dataset/config/condition_map.json — authoritative "condition_name"):
+  H    healthy                     R    restored
+  C    caries                      Te   endodontic treatment
+  Im   implant                     Rr   residual root
+  M3i  impacted third molar        M3f  developing third molar
+  CpuM prosthetic crown            Dc   crown destruction
+  Di   incisal or occlusal wear    P    pontic
+RARE classes (low support, the hard part of the task; oversampled later):
+  Dc, Im, P, Rr, M3f   (train tooth-occurrences < ~160 each before rebalancing)
 
-6. Audit steps
---------------
-- Audited the writing several times for AI-like wording.
-- Rewrote parts that sounded too generic or too formal.
-- Checked for old terms after rewriting:
-  - VQA
-  - AI-Assisted
-  - GalLens
-  - Base Prompt
-  - model-agnostic
-  - I avoid
-- Removed or replaced these terms where they no longer matched the current pipeline.
-- Checked that the section before 2.1.2 was not changed by hashing the first 318 lines of report.tex.
-- Confirmed the hash stayed the same after editing Section 2.1.2 onward.
-- Checked long sentences in the rewritten block and shortened the ones that were too long.
-- Changed some wording to sound more natural:
-  - "external AI model" -> "outside model"
-  - split long examples into shorter sentences
-  - split long metadata and conversion sentences
+FDI detector uses 32 teeth -> num_classes 33 (+bg). Disease detector uses 12 ->
+num_classes 13 (+bg). All COCO annotations are iscrowd=0 (each tooth is a single
+object; the field only exists to satisfy the COCO schema).
 
-7. LaTeX build setup
---------------------
-- pdflatex was not available at first.
-- Installed MiKTeX using winget.
-- Used the MiKTeX binaries from:
-  C:\Users\timodapoet\AppData\Local\Programs\MiKTeX\miktex\bin\x64
-- Enabled MiKTeX automatic package installation.
-- Built the report using pdflatex and BibTeX.
-- Used the usual build sequence when references were needed:
-  pdflatex -> bibtex -> pdflatex -> pdflatex
 
-8. Asset fixes for PDF build
-----------------------------
-- The report called USTH.jpg, but the file was missing.
-- Downloaded the USTH logo from the official USTH website as USTH.png.
-- Created USTH.jpg from USTH.png because the LaTeX file called USTH.jpg.
-- The report called phase_1.png, while only Phase1.png existed.
-- Created phase_1.png from Phase1.png so the existing LaTeX line could compile without changing the part before Section 2.1.2.
-- Created a workflow image Phase1.png for the Phase 1 data preparation process.
+================================================================================
+3. REPO LAYOUT (inside inredd-dataset-pan924-yolo-format-main/)
+================================================================================
+  annotations/              master + raw annotation JSON (section 2)
+  images/                   924 original panoramic JPGs (~4 GB) — gitignored
+  faster_rcnn_fdi/          FDI detector: configs/ data/ outputs/ scripts/
+  faster_rcnn_disease/      Disease detector: same layout
+  vlm_report_dataset/       VLM pipeline (section 5–6) — CURRENT FOCUS
+    config/                 condition_map.json, disease_label_remap.json,
+                            prompt_templates/{full_report_prompt,regional_report_prompt}.txt
+    scripts/                build/convert/eval/rebalance/validate/generate (section 5)
+    common/                 model-agnostic dataset: images/<id>/<view>.jpg + {train,val,test}.jsonl
+                            + raw/ (intermediate) + metadata/ (build & rebalance summaries)
+    common_balanced/        rebalanced {train,val,test}.jsonl (rare-class oversampling)
+    converted/              per-model JSONL: qwen/ llava/ internvl/ phi/ paligemma/
+    training/
+      rtx3090/              QLoRA path (shared_config.py + train_<model>.py + helpers)
+      colab_a100/           bf16 LoRA notebooks + generate_notebooks.py (SOURCE OF TRUTH)
+      tools/                swift_pred_to_eval.py, compare_models.py, validate_setup.py
+      results/              final per-model metrics/results land here
+  scripts/                  merge_annotations.py, generate_report_docx.py, viz
+  stats/  visualizations/   dataset analysis & figures
+  README.md  requirements.txt
+  (OUTER root also has report.tex/.pdf, references.bib — the thesis write-up;
+   and pan924_vlm.zip — the manual Colab upload bundle, gitignored.)
 
-9. PDF build result
--------------------
-- Built report.pdf successfully.
-- Final PDF path:
-  d:\Self\inredd-dataset-pan924-yolo-format-main\report.pdf
-- The final build produced a PDF with 15 pages.
-- No fatal LaTeX errors remained.
-- Citations were resolved.
-- One small overfull warning remains around the figure area before Section 2.1.2.
-- I did not edit that area because the user explicitly asked not to change anything before Section 2.1.2.
 
-10. Files created or changed
-----------------------------
-- Modified:
-  - report.tex
-- Created:
-  - references.bib
-  - USTH.png
-  - USTH.jpg
-  - Phase1.png
-  - phase_1.png
-  - report.pdf
-  - history.txt
-- LaTeX also generated auxiliary build files such as:
-  - report.aux
-  - report.bbl
-  - report.blg
-  - report.log
-  - report.out
-  - report.toc
-  - report.lof
-  - report.lot
+================================================================================
+4. FILE INVENTORY (what each script does + how to run it)
+================================================================================
+All scripts take --root (default ".") and are meant to be run from the project
+dir. Paths below are relative to inredd-dataset-pan924-yolo-format-main/.
 
-11. Current status
-------------------
-- report.tex has been updated to match the current dataset preparation pipeline.
-- The rewritten section starts from Section 2.1.2.
-- The text before Section 2.1.2 was preserved during that specific rewrite.
-- report.pdf builds successfully.
-- The report currently stops at data preparation, with training and results left for the next stage.
+VLM pipeline (vlm_report_dataset/scripts/):
+  build_5view_common_dataset.py  Build the model-agnostic "common" dataset from
+        annotations/dataset_final_v2.json + images/. Splits by IMAGE 80/10/10
+        (seed 924), crops each panoramic into 4 overlapping quadrants (overlap
+        0.10) + keeps the full image = 5 views, writes common/images/<id>/<view>.jpg
+        and common/{train,val,test}.jsonl + metadata/build_summary.json.
+        Key args: --overlap-x/-y 0.10, --jpeg-quality 95, --train/val/test-ratio.
+  generate_clinical_reports.py   Fill the free-text "comment"/"summary" fields
+        (template-based) from common/raw/ into common/.
+  rebalance_common.py            Oversample RARE conditions in TRAIN ONLY ->
+        common_balanced/. Args: --in-dir common --out-dir common_balanced --cap 8
+        --seed 924. Writes metadata/rebalance_summary.json.
+  convert_dataset.py             Convert a common-format dir into the 5 per-model
+        formats under converted/. Args: --input-dir (use common_balanced to get
+        the oversampled train), --models qwen llava internvl phi paligemma.
+        NOTE: this is why converted/qwen/train.jsonl has 5817 rows (from
+        common_balanced) while common/train.jsonl has 3695.
+  validate_common_dataset.py     Sanity-check the common dataset against
+        config/condition_map.json. Writes metadata/validation_report.json.
+  eval_report.py                 THE single metrics source (section 7).
+
+VLM training tools (vlm_report_dataset/training/tools/):
+  swift_pred_to_eval.py  Reshape `swift infer` output into {id, prediction} JSONL.
+        Args: --val <gold jsonl> --swift-result <infer jsonl> --pred-field response --out.
+  compare_models.py      Aggregate many metrics_*_test.json into a comparison table.
+        Usage: python ... compare_models.py <glob of metrics_*_test.json>.
+  validate_setup.py      Pre-flight environment check.
+
+VLM training — RTX 3090 path (vlm_report_dataset/training/rtx3090/):
+  shared_config.py       Single source of QLoRA hyper-params + helpers:
+        train_model(model_name, output_dir, ...) builds & runs the `swift sft`
+        command; evaluate_and_save(model_key, ...) scores every checkpoint on val
+        by macro-F1, picks best, evaluates on test, writes results/<key>_results.txt.
+        QLoRA 4-bit (bnb), MAX_PIXELS 802816, per_device 1 x accum 16, 2 epochs.
+  train_qwen.py / train_internvl.py / train_llava.py / train_phi.py /
+  train_paligemma.py     Thin per-model entry points calling shared_config.
+  select_best_checkpoint.py, smoke_test.py  helpers.
+
+VLM training — Colab A100 path (vlm_report_dataset/training/colab_a100/):
+  generate_notebooks.py  *** SOURCE OF TRUTH. *** Generates the 5 notebooks from
+        ONE template. Do NOT hand-edit the .ipynb — edit this file and re-run:
+            <repo>\.venv\Scripts\python.exe generate_notebooks.py
+        MODELS dict maps key -> (HF id, uses_MAX_PIXELS, gated, note).
+  train_qwen.ipynb / train_internvl.ipynb / train_llava.ipynb / train_phi.ipynb /
+  train_paligemma.ipynb  GENERATED (18 cells each). bf16 LoRA, MAX_PIXELS 1003520.
+  README.md              How-to for the Colab path.
+
+Faster R-CNN (faster_rcnn_fdi/scripts/ and faster_rcnn_disease/scripts/ — twins):
+  prepare_frcnn_dataset.py / prepare_disease_dataset.py  Build COCO train/val/test
+        from annotations (disease one applies the 20->12 remap; see its
+        DISEASE_CLASSES + DISEASE_REMAP). Writes data/annotations/*_coco.json +
+        prepare_summary.json.
+  frcnn_common.py, frcnn_dataset.py  shared model/dataset helpers.
+  train_frcnn.py     Train from configs/train_config.yaml. Many --override flags
+        (--epochs --architecture --min-size --max-size --early-stop-* --resume --dry-run).
+  infer_frcnn.py     Single-image inference (--image required, --score-threshold).
+  benchmark_frcnn_models.py  Sweep several backbones/input sizes.
+  plot_benchmark.py (disease only)  Plot benchmark figures.
+
+Misc (scripts/ and OUTER files):
+  scripts/merge_annotations.py, scripts/generate_report_docx.py,
+  scripts/visualize_teeth_fdi_examples.py, inredd_dataset_pan924_stats.py,
+  visualize_ann_*.py, analyze_*.py, hihi.py  (dataset stats / viz / one-offs).
+
+
+================================================================================
+5. VLM DATA PIPELINE (how the data is produced — the DAG)
+================================================================================
+annotations/dataset_final_v2.json + images/
+   │  build_5view_common_dataset.py   (split-by-image 80/10/10, seed 924; crop 5 views)
+   ▼
+vlm_report_dataset/common/   (model-agnostic; images/<id>/<view>.jpg + *.jsonl)
+   │  generate_clinical_reports.py    (fills comment/summary text)
+   │  validate_common_dataset.py      (QA against condition_map)
+   │
+   ├─ rebalance_common.py  ──►  common_balanced/   (TRAIN oversampled; val/test same)
+   │
+   ▼  convert_dataset.py  (--input-dir common_balanced)
+vlm_report_dataset/converted/{qwen,llava,internvl,phi,paligemma}/{train,val,test}.jsonl
+   │  swift sft  (ms-swift; uses converted/qwen for ALL models — see section 6)
+   ▼
+LoRA checkpoints  ─►  swift infer  ─►  swift_pred_to_eval.py  ─►  eval_report.py  ─►  compare_models.py
+
+5 VIEWS per panoramic (924 images x 5 = 4620 samples = 4620 crop files):
+  4 quadrant REGIONS (overlapping): image_upper_left, image_upper_right,
+     image_lower_left, image_lower_right  -> task "regional_report" (regional prompt)
+  1 "full" view (whole panoramic)         -> task "full_quadrant_report" (full prompt)
+
+Split sizes:
+  common (build_summary.json):   train 739 imgs/3695 samples · val 92/460 · test 93/465
+  common_balanced (rebalance_summary.json): TRAIN 3695 -> 5817 rows (+2122 dup,
+     +57.4%), val/test unchanged. Rare-class multipliers: Dc x7.89, Im x8.0, P x4.0,
+     Rr x3.97, M3f x3.34 (regional-only oversampling, KG inverse-prevalence, cap 8, seed 924).
+  converted/qwen (what training actually reads): train 5817 / val 460 / test 465.
+
+IMAGE PATHS inside every JSONL are RELATIVE to the project dir, e.g.
+  vlm_report_dataset/common/images/1119-F-59/image_upper_right.jpg
+=> any runtime must chdir to the dir that contains vlm_report_dataset/ before training.
+
+
+================================================================================
+6. DATA SCHEMAS (concrete examples — what the bytes actually look like)
+================================================================================
+6.1 PROMPTS (vlm_report_dataset/config/prompt_templates/)
+  regional_report_prompt.txt (one quadrant):
+     "<image>\nThis is the {region} crop of a panoramic dental radiograph.\n
+      Identify the visible annotated teeth using FDI notation and report each tooth
+      condition.\nReturn only valid JSON with this schema:\n
+      {\"region\":\"string\",\"teeth\":[{\"fdi\":\"string\",\"condition\":\"string\",
+      \"condition_name\":\"string\"}],\"comment\":\"string\"}"
+  full_report_prompt.txt (full image): asks for {"regions":{<4 regions each with
+      teeth+comment>}, "summary":"string"}.
+
+6.2 GOLD TARGET (assistant answer) — two schemas the eval understands:
+  regional_report:
+     {"region":"image_upper_right",
+      "teeth":[{"fdi":"16","condition":"R","condition_name":"restored"}],
+      "comment":"..."}
+  full_quadrant_report:
+     {"regions":{"image_upper_left":{"teeth":[...],"comment":"..."}, ...x4},
+      "summary":"..."}
+
+6.3 COMMON ROW (model-agnostic; one line of common/*.jsonl):
+     {"id":"<imgid>_<view>_report","image":"vlm_report_dataset/common/images/<id>/<view>.jpg",
+      "source_image":"<id>.jpg","view":"image_upper_right","task":"regional_report",
+      "messages":[{"role":"user","content":"<image>\n..."},
+                  {"role":"assistant","content":"{json target string}"}],
+      "metadata":{"width":...,"height":...,"crop_boxes":{<region>:[x1,y1,x2,y2],...}}}
+
+6.4 THE 5 CONVERTED FORMATS (convert_dataset.py builds these from a common row):
+  qwen (ms-swift universal — USED FOR ALL 5 MODELS in the ms-swift path):
+     {"id","messages":[{role:user,content:"<image>\n..."},{role:assistant,content:"{json}"}],
+      "images":["...jpg"], "metadata":{...}}
+  llava (HF multimodal chat-template):
+     content is a typed list [{"type":"image","path":...},{"type":"text","text":...}]; no "<image>" token.
+  internvl (ShareGPT):
+     {"image","width","height","conversations":[{from:human,value:"<image>\n..."},{from:gpt,value:"{json}"}]}
+  phi:
+     {"image","prompt":"<|user|>\n<|image_1|>\n{prompt}<|end|>\n<|assistant|>\n","response":"{json}<|end|>"}
+  paligemma:
+     {"image","prefix":"{prompt no <image>}","suffix":"{json}"}
+
+  *** ms-swift `swift sft --model <X> --dataset converted/qwen/train.jsonl` works for
+      every model: ms-swift applies each model's own chat template internally based on
+      --model. The other 4 formats are for training OUTSIDE ms-swift (HF/native scripts);
+      the Colab notebooks do NOT use them. ***
+
+6.5 COCO (detector annotations, faster_rcnn_*/data/annotations/*_coco.json):
+  categories: disease -> 12 (+bg via num_classes 13); fdi -> 32 (+bg 33).
+  every annotation iscrowd=0; one box per physical tooth (deduped by FDI).
+
+
+================================================================================
+7. EVALUATION (vlm_report_dataset/scripts/eval_report.py — THE metrics source)
+================================================================================
+Unit of evaluation = one tooth instance keyed by (sample_id, region, fdi); the
+class is the condition code. Handles BOTH gold schemas (regional + full). Parses
+predictions tolerantly (strips markdown fences / prose around JSON).
+
+Run:
+  # sanity (must be ~1.000):
+  python vlm_report_dataset/scripts/eval_report.py --gold converted/qwen/val.jsonl --self-test
+  # score predictions:
+  python vlm_report_dataset/scripts/eval_report.py --gold converted/qwen/test.jsonl \
+         --pred preds_test.jsonl --out-json metrics_qwen_test.json --tag qwen/test
+  # preds line format: {"id":..., "prediction":"<json string or object>"}
+
+Metrics produced (per_condition + aggregates):
+  Detection (FDI): fdi_precision/recall/detection_f1, hallucination_rate (teeth
+     invented), miss_rate (teeth missed).
+  Classification (condition labels): per-condition P/R/F1+support, micro/MACRO/weighted.
+     **macro_f1 is the HEADLINE metric** (robust to class imbalance; rare classes
+     count equally) — checkpoint selection uses it.
+  Joint correctness: condition_acc_on_detected, tooth_accuracy (detect+classify),
+     exact_report_match_rate.
+  Generation: json_valid_pct, text_rouge_l (self-contained LCS ROUGE-L on comments/
+     summary), top_confusions (gold->pred on correctly-detected teeth).
+  RARE set hard-coded = {Dc, Im, P, Rr, M3f}; printed/tiered separately.
+
+Checkpoint selection (both training paths): score EVERY saved checkpoint on val
+by macro_f1, keep the best, then evaluate it once on test. This generation step is
+SLOW (can exceed training time) because it decodes the whole val/test set per
+checkpoint — raising SAVE_STEPS reduces the number of checkpoints to score.
+
+
+================================================================================
+8. FASTER R-CNN DETECTORS (built & trained; out of current scope)
+================================================================================
+Config: configs/train_config.yaml in each of faster_rcnn_fdi/ and faster_rcnn_disease/.
+  architecture fasterrcnn_mobilenet_v3_large_320_fpn (torchvision, pretrained),
+  trainable_backbone_layers 1, min_size 512 / max_size 768, epochs 80, batch 1,
+  grad_accum 4, lr 2e-4, wd 1e-4, AMP on, early stopping patience 8.
+  FDI monitors val_loss; disease monitors macro_f1. FDI num_classes 33; disease 13.
+Splits (prepare_summary.json, identical for both, by design — fair comparison):
+  train 557 imgs / val 130 / test 120; annotations 13631 / 3072 / 2864;
+  dropped_duplicate_same_fdi 466, dropped_empty_images 117.
+Trained .pth checkpoints in outputs/ (~10.8 GB total) — gitignored, local only.
+
+
+================================================================================
+9. VLM TRAINING SETUPS (5 models, identical hyper-params = fair comparison)
+================================================================================
+Models (key -> HF id):
+  qwen      Qwen/Qwen2.5-VL-7B-Instruct
+  internvl  OpenGVLab/InternVL3-8B
+  llava     llava-hf/llava-onevision-qwen2-7b-ov-hf
+  phi       microsoft/Phi-3.5-vision-instruct   (ATTN_IMPL='eager')
+  paligemma google/paligemma2-3b-pt-448         (GATED -> notebook_login(); fixed
+                                                 448px so MAX_PIXELS unused)
+Shared LoRA: train_type lora, rank 8, alpha 32, dropout 0.1, target_modules
+  all-linear, freeze_vit true, epochs 2, lr 1e-4, wd 0.1, warmup 0.05, cosine,
+  max_length 4096, gradient_checkpointing true, eval/save every 100 steps,
+  save_total_limit 12, seed 924. Effective batch = 16.
+
+Two paths (same data, same LoRA — only quantization/resolution/batch differ):
+  rtx3090/  QLoRA 4-bit (bnb) for a 24GB card. MAX_PIXELS 802816. per_device 1 x
+            accum 16. Driven by shared_config.py via `swift sft`; auto-resume.
+  colab_a100/  bf16 LoRA (no 4-bit) for an A100. MAX_PIXELS 1003520. DEFAULT
+            per_device 1 x accum 16 (safe on 40GB; bump to 2 x 8 — still 16 — if
+            memory is comfortable / on 80GB). Generated notebooks, 18 cells:
+            1 GPU check · 2 install · 3 mount Drive · 4 get data to local disk ·
+            5 settings · 6 train (auto-resume) · 7 pick best ckpt by macro-F1 ·
+            8 test metrics · 9 compare all models.
+
+Rough A100 time (default batch 1): PaliGemma ~45–75min, Phi ~1–1.5h, Qwen/LLaVA
+  ~1.5–2.5h, InternVL ~2–3h; all 5 ~9–13h train. Checkpoint-selection/eval can add
+  several hours on top.
+
+
+================================================================================
+10. HARDWARE / RUNTIME CONSTRAINTS
+================================================================================
+- Local GPU: NVIDIA RTX 3050 Laptop, 4 GB VRAM -> CANNOT load/train a 7–8B VLM.
+  VLM training MUST run on a cloud A100 (Colab).
+- User runs via VSCode connected to a Colab runtime ("Colab" kernel). Code executes
+  on the Colab VM, NOT the laptop -> local files are invisible to the kernel; the
+  dataset must be placed on the VM (via Google Drive, then copied to local /content).
+
+
+================================================================================
+11. GITHUB STATE
+================================================================================
+- Initial push done: 629 files, ~48 MB, branch main.
+- .gitignore (repo root) keeps the push small + under GitHub's 100MB/file limit:
+  excludes images (*.jpg/*.png...), weights (*.pth/*.pt/*.safetensors...),
+  envs (.conda/.venv/__pycache__), *.jsonl, .env, LaTeX build artifacts.
+- Kept on GitHub: all .py/.ipynb, configs (.yaml), annotation/config .json, scripts,
+  README/markdown, report.tex/.pdf, references.bib.
+- pan924_vlm.zip (2.3 GB data bundle) is gitignored — uploaded to Drive manually.
+
+
+================================================================================
+12. CURRENT WORK / WHAT WAS DONE THIS SESSION (2026-06-18)
+================================================================================
+Goal: make the 5 Colab A100 notebooks run reliably and package the data for upload.
+
+(a) Hardened generate_notebooks.py + regenerated all 5 notebooks:
+    - Pin "ms-swift>=3.2,<4.0" (stop future CLI-flag breakage; reproducible).
+    - flash-attn made OPTIONAL (commented out): it takes 15–30 min to build on Colab
+      and often fails; ms-swift falls back to PyTorch SDPA. ATTN_IMPL stays None
+      (Phi uses 'eager').
+    - Safe default batch per_device 1 x accum 16 (still effective 16) so a 40GB A100
+      won't OOM on first run; documented bumping to 2 x 8 for ~2x speed.
+    - Added GPU assert + bf16 check, --dataloader_num_workers 4, dropped unused dep.
+
+(b) Built the minimal upload bundle  d:\...\pan924_vlm.zip  (~2.3 GB). Zip root
+    starts with vlm_report_dataset/ so paths resolve after unzip. Contents:
+      vlm_report_dataset/converted/qwen/{train,val,test}.jsonl
+      vlm_report_dataset/common/images/   (4620 crops)
+      vlm_report_dataset/scripts/eval_report.py
+      vlm_report_dataset/training/tools/{swift_pred_to_eval.py, compare_models.py}
+    Excluded: original panoramics (images/), the other 4 converted formats,
+    common/raw, common_balanced, metadata, FRCNN, weights, venvs.
+    VERIFIED case-sensitively: 4620 jsonl image refs == 4620 zip entries, 0 missing,
+    0 extra -> safe on Linux/Colab.
+
+(c) Drive layout (user): My Drive / Thesis / pan924_vlm / vlm_report_dataset / ...
+    (user uploaded the EXTRACTED folder; uploading the single .zip is faster — one
+    big file copies far faster than 4620 small files over Drive FUSE).
+
+(d) Wired notebook cell 4 to the user's Drive + made it robust:
+    - prefers Thesis/pan924_vlm.zip, unzipping locally with Python `zipfile`
+      (NOT `!unzip {var}`, which can fail to substitute under the VSCode-Colab kernel);
+      else falls back to copying Thesis/pan924_vlm/vlm_report_dataset/.
+    - checks the actual target FILE (train.jsonl), prints diagnostics (Drive mounted?
+      zip? folder? what's in Thesis/), copies to local /content/pan924 for fast reads.
+    - per-model outputs: /content/drive/MyDrive/Thesis/pan924_runs/<model>/ (no clashes).
+    - compare cell globs Thesis/pan924_runs/*/metrics_*_test.json.
+
+LAST ISSUE DEBUGGED: on Colab the user hit
+  FileNotFoundError: vlm_report_dataset/converted/qwen/train.jsonl  at cell 4.
+Likely cause: Drive not mounted (cell 3 skipped), wrong Drive path/name, or the old
+`!unzip {var}` not substituting under VSCode-Colab. The regenerated cell 4 (item d)
+fixes this (pure-Python zipfile + diagnostics + target-file check). Action for user:
+re-run cell 3 (mount) then the new cell 4 and read the printed diagnostics.
+
+
+================================================================================
+13. OPEN ITEMS / NEXT STEPS
+================================================================================
+- [ ] User re-runs fixed cell 4 on Colab; confirm data lands at
+      /content/pan924/vlm_report_dataset/ (diagnostics pinpoint any path issue).
+- [ ] Recommended: upload pan924_vlm.zip to Drive/Thesis (faster than the folder);
+      the extracted folder can then be deleted.
+- [ ] PaliGemma is gated: accept license + notebook_login() before training.
+- [ ] Consider SAVE_STEPS 100 -> 200 to cut the slow per-checkpoint eval.
+- [ ] Updated notebooks + README + generate_notebooks.py + this history.txt are NOT
+      yet committed/pushed (older notebooks were in the initial push).
+- [ ] FRCNN training is intentionally out of the current Colab scope.
+
+================================================================================
+END
+================================================================================

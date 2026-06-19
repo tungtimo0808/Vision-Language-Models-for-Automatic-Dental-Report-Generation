@@ -42,7 +42,7 @@ DISEASE_CLASSES: list[str] = [
     "Dc",    # destroyed crown
 ]
 
-# Raw -> canonical remap (same policy as prepared_dataset build_summary).
+# Raw -> canonical remap (same policy as the rest of the pipeline).
 DISEASE_REMAP: dict[str, str] = {
     "RiM": "Te",
     "Ri": "Te",

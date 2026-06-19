@@ -39,7 +39,7 @@ def config_cell_source(model_key, model_name, use_max_pixels, attn_default):
         'MODEL_NAME = "' + model_name + '"\n'
         'MODEL_KEY = "' + model_key + '"\n'
         "USE_MAX_PIXELS = " + str(use_max_pixels) + "\n"
-        "ATTN_IMPL = " + attn_default + "      # 'eager' if flash-attn is not installed\n"
+        "ATTN_IMPL = " + attn_default + "      # None = ms-swift uses PyTorch SDPA (no flash-attn build needed); Phi uses 'eager'\n"
         "\n"
         "# ===== Shared A100 settings (identical in all 5 notebooks = fair comparison) =====\n"
         'TRAIN_TYPE = "lora"          # bf16 LoRA (A100 has the VRAM, no 4-bit needed)\n'
@@ -54,8 +54,8 @@ def config_cell_source(model_key, model_name, use_max_pixels, attn_default):
         'WEIGHT_DECAY = "0.1"\n'
         'WARMUP_RATIO = "0.05"\n'
         'LR_SCHEDULER = "cosine"\n'
-        "PER_DEVICE_BATCH_SIZE = 2    # A100. effective batch = 2 * 8 = 16 (same as the 3090 run)\n"
-        "GRAD_ACCUM_STEPS = 8\n"
+        "PER_DEVICE_BATCH_SIZE = 1    # safe on a 40GB A100. effective batch = 1 * 16 = 16 (same as the 3090 run)\n"
+        "GRAD_ACCUM_STEPS = 16        # if you DON'T hit OOM, set BATCH=2 / ACCUM=8 (still 16) to train ~2x faster\n"
         "MAX_LENGTH = 4096\n"
         'GRAD_CHECKPOINTING = "true"\n'
         "EVAL_STEPS = 100\n"
@@ -65,15 +65,17 @@ def config_cell_source(model_key, model_name, use_max_pixels, attn_default):
         "MAX_PIXELS = 1003520         # 1280*28*28 (higher than the 3090; lower first if OOM)\n"
         "\n"
         "import os\n"
-        'OUTPUT_DIR = "/content/drive/MyDrive/pan924_runs/" + MODEL_KEY\n'
+        "# One folder PER MODEL on Drive, so the 5 models never overwrite each other's checkpoints/results.\n"
+        'OUTPUT_DIR = "/content/drive/MyDrive/Thesis/pan924_runs/" + MODEL_KEY\n'
         "os.makedirs(OUTPUT_DIR, exist_ok=True)\n"
-        'print("Checkpoints will be saved to:", OUTPUT_DIR)\n'
+        'print("Checkpoints + results for this model go to:", OUTPUT_DIR)\n'
     )
 
 
 TRAIN_CELL = (
     "import os\n"
     "import glob\n"
+    "import sys\n"
     "import subprocess\n"
     "\n"
     "def find_last_checkpoint(folder):\n"
@@ -88,6 +90,7 @@ TRAIN_CELL = (
     "    return last_path\n"
     "\n"
     "env = os.environ.copy()\n"
+    'env["PYTHONUNBUFFERED"] = "1"          # stream logs live instead of buffering them\n'
     "if USE_MAX_PIXELS:\n"
     '    env["MAX_PIXELS"] = str(MAX_PIXELS)\n'
     "\n"
@@ -112,6 +115,7 @@ TRAIN_CELL = (
     '    "--per_device_train_batch_size", str(PER_DEVICE_BATCH_SIZE),\n'
     '    "--per_device_eval_batch_size", "1",\n'
     '    "--gradient_accumulation_steps", str(GRAD_ACCUM_STEPS),\n'
+    '    "--dataloader_num_workers", "4",\n'
     '    "--max_length", str(MAX_LENGTH),\n'
     '    "--gradient_checkpointing", GRAD_CHECKPOINTING,\n'
     '    "--eval_strategy", "steps",\n'
@@ -137,9 +141,19 @@ TRAIN_CELL = (
     '    print("Starting from the beginning.")\n'
     "\n"
     'print(" ".join(command))\n'
-    "subprocess.run(command, env=env, check=True)\n"
-    "# If you get CUDA OOM: lower MAX_PIXELS (1003520 -> 802816 -> 602112), then\n"
-    "# PER_DEVICE_BATCH_SIZE 2 -> 1, and re-run this cell (it resumes).\n"
+    'print("\\n>>> The model is already downloaded (step 6). swift now LOADS it + preprocesses the data\\n"\n'
+    '      ">>> - a few SILENT minutes, NOT frozen - then loss logs print every 5 steps. Liveness check\\n"\n'
+    '      ">>> without touching this busy kernel: watch Drive Thesis/pan924_runs/<model>/ in your browser.\\n")\n'
+    "# Stream swift's output line-by-line so you can see it is making progress (not hung).\n"
+    "proc = subprocess.Popen(command, env=env, stdout=subprocess.PIPE,\n"
+    "                        stderr=subprocess.STDOUT, text=True, bufsize=1)\n"
+    "for line in proc.stdout:\n"
+    "    print(line, end=''); sys.stdout.flush()\n"
+    "proc.wait()\n"
+    "if proc.returncode != 0:\n"
+    "    raise SystemExit('Training failed with exit code ' + str(proc.returncode))\n"
+    "# CUDA OOM: lower MAX_PIXELS (1003520 -> 802816 -> 602112) and re-run (it resumes).\n"
+    "# The default batch (1) is the safe floor; only raise it if memory is comfortable.\n"
 )
 
 
@@ -171,7 +185,8 @@ SELECT_CELL = (
     "    infer_out = os.path.join(checkpoint, 'infer_val.jsonl')\n"
     "    pred_out = os.path.join(checkpoint, 'preds_val.jsonl')\n"
     "    metrics_out = os.path.join(checkpoint, 'metrics_val.json')\n"
-    "    subprocess.run(['swift', 'infer', '--adapters', checkpoint, '--val_dataset', VAL_DATA,\n"
+    "    subprocess.run(['swift', 'infer', '--model', MODEL_NAME,\n"
+    "                    '--adapters', checkpoint, '--val_dataset', VAL_DATA,\n"
     "                    '--max_new_tokens', '1024', '--temperature', '0',\n"
     "                    '--result_path', infer_out], env=env, check=True)\n"
     "    subprocess.run(['python', ADAPTER_SCRIPT, '--val', VAL_DATA,\n"
@@ -205,7 +220,8 @@ FINAL_CELL = (
     "pred_out = os.path.join(BEST_CHECKPOINT, 'preds_test.jsonl')\n"
     "metrics_out = os.path.join(OUTPUT_DIR, 'metrics_' + MODEL_KEY + '_test.json')\n"
     "\n"
-    "subprocess.run(['swift', 'infer', '--adapters', BEST_CHECKPOINT, '--val_dataset', TEST_DATA,\n"
+    "subprocess.run(['swift', 'infer', '--model', MODEL_NAME,\n"
+    "                '--adapters', BEST_CHECKPOINT, '--val_dataset', TEST_DATA,\n"
     "                '--max_new_tokens', '1024', '--temperature', '0',\n"
     "                '--result_path', infer_out], env=env, check=True)\n"
     "subprocess.run(['python', ADAPTER_SCRIPT, '--val', TEST_DATA,\n"
@@ -223,12 +239,28 @@ FINAL_CELL = (
 )
 
 
+DOWNLOAD_CELL = (
+    "# Download the base model HERE (in the notebook) so you see a LIVE progress bar and can tell\n"
+    "# it is really downloading, not frozen. It goes to the VM's local HF cache; the train cell then\n"
+    "# loads it with NO second silent download. On a fresh VM after a disconnect, just re-run this cell.\n"
+    "from huggingface_hub import snapshot_download\n"
+    'print("Downloading", MODEL_NAME, "- watch the progress bars below (hf_transfer = fast):")\n'
+    "local_path = snapshot_download(MODEL_NAME)\n"
+    'print("\\nBase model ready at:", local_path)\n'
+)
+
+
 def install_cell_source(gated):
     text = (
-        "%pip install -q -U ms-swift accelerate\n"
-        "%pip install -q -U qwen_vl_utils timm einops av sentencepiece\n"
-        "# flash-attn makes the A100 much faster but takes a few minutes to build:\n"
-        "%pip install -q flash-attn --no-build-isolation\n"
+        "# Pinned to the 3.x line these notebooks were built against, so the CLI flags below stay valid.\n"
+        "# After your first successful run, replace this with the exact version printed at the bottom\n"
+        "# of this cell (e.g. ms-swift==3.x.y) to lock the run down completely.\n"
+        '%pip install -q "ms-swift>=3.2,<4.0" accelerate\n'
+        "%pip install -q -U qwen_vl_utils timm einops sentencepiece hf_transfer\n"
+        "# flash-attn is OPTIONAL. It speeds up the A100 ~10-20%, but compiling it on Colab takes\n"
+        "# 15-30 min and often fails. ms-swift falls back to PyTorch SDPA (fast + reliable), which is\n"
+        "# what these notebooks use by default (ATTN_IMPL stays None). Uncomment ONLY for extra speed:\n"
+        "# %pip install -q flash-attn --no-build-isolation\n"
     )
     if gated:
         text += (
@@ -237,8 +269,15 @@ def install_cell_source(gated):
             "notebook_login()\n"
         )
     text += (
+        "import os\n"
+        '# ms-swift defaults to ModelScope (slow from outside China). Force Hugging Face + fast transfer.\n'
+        '# These MUST be set before importing swift / huggingface_hub.\n'
+        'os.environ["USE_HF"] = "1"\n'
+        'os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"\n'
         "import swift, torch\n"
-        "print('ms-swift', swift.__version__, '| cuda available:', torch.cuda.is_available())\n"
+        "assert torch.cuda.is_available(), 'No GPU. Set Runtime -> Change runtime type -> A100 GPU.'\n"
+        "print('ms-swift', swift.__version__, '| torch', torch.__version__)\n"
+        "print('GPU:', torch.cuda.get_device_name(0), '| bf16 supported:', torch.cuda.is_bf16_supported())\n"
     )
     return text
 
@@ -265,59 +304,98 @@ def build_notebook(model_key, model_name, use_max_pixels, gated, note):
         code_cell("from google.colab import drive\ndrive.mount('/content/drive')"),
 
         markdown_cell(
-            "## 4. Put the code and dataset on the machine\n"
-            "Zip `vlm_report_dataset/` (with the 4620 images), upload it to Drive, and set the path below."
+            "## 4. Get the dataset onto the VM's local disk\n"
+            "Reading 4620 small images straight off Drive every epoch is slow and stalls, so we put the data on the "
+            "**local** VM disk `/content/pan924` and train from there. Only checkpoints go back to Drive (step 6).\n\n"
+            "This cell uses whatever you have on Drive, **preferring the zip** because it's much faster:\n"
+            "- **`Thesis/pan924_vlm.zip`** → unzipped locally (~1–3 min, one big file = fast). **Recommended.**\n"
+            "- else **`Thesis/pan924_vlm/vlm_report_dataset/`** (extracted folder) → copied file-by-file (slower).\n\n"
+            "After a disconnect just re-run this cell."
         ),
         code_cell(
-            "import os\n"
-            "REPO_DIR = '/content/pan924'                              # will contain vlm_report_dataset/\n"
-            "DATA_ZIP = '/content/drive/MyDrive/pan924_dataset.zip'    # your uploaded zip\n"
+            "import os, shutil, zipfile\n"
+            "DRIVE_ZIP    = '/content/drive/MyDrive/Thesis/pan924_vlm.zip'   # fast path: one big file\n"
+            "DRIVE_FOLDER = '/content/drive/MyDrive/Thesis/pan924_vlm'       # fallback: already-extracted folder\n"
+            "REPO_DIR     = '/content/pan924'                                # local copy used for training\n"
             "\n"
+            "# Diagnostics first, so a wrong path / unmounted Drive is obvious.\n"
+            "print('Drive mounted?  ', os.path.isdir('/content/drive/MyDrive'))\n"
+            "print('zip on Drive?   ', os.path.exists(DRIVE_ZIP))\n"
+            "print('folder on Drive?', os.path.isdir(os.path.join(DRIVE_FOLDER, 'vlm_report_dataset')))\n"
+            "if os.path.isdir('/content/drive/MyDrive/Thesis'):\n"
+            "    print('Thesis/ contains:', os.listdir('/content/drive/MyDrive/Thesis'))\n"
+            "\n"
+            "# Check the actual target FILE (not just the folder), so a partial leftover dir is re-filled.\n"
+            "train_jsonl = os.path.join(REPO_DIR, 'vlm_report_dataset', 'converted', 'qwen', 'train.jsonl')\n"
             "os.makedirs(REPO_DIR, exist_ok=True)\n"
-            "if not os.path.isdir(os.path.join(REPO_DIR, 'vlm_report_dataset')):\n"
-            "    assert os.path.exists(DATA_ZIP), 'Upload your dataset zip to ' + DATA_ZIP\n"
-            "    !unzip -q {DATA_ZIP} -d {REPO_DIR}\n"
+            "if not os.path.exists(train_jsonl):\n"
+            "    if os.path.exists(DRIVE_ZIP):\n"
+            "        print('Unzipping from Drive (zipfile, no shell)...')\n"
+            "        with zipfile.ZipFile(DRIVE_ZIP) as z:\n"
+            "            z.extractall(REPO_DIR)\n"
+            "    elif os.path.isdir(os.path.join(DRIVE_FOLDER, 'vlm_report_dataset')):\n"
+            "        print('No zip - copying the extracted folder from Drive (slower)...')\n"
+            "        shutil.copytree(os.path.join(DRIVE_FOLDER, 'vlm_report_dataset'),\n"
+            "                        os.path.join(REPO_DIR, 'vlm_report_dataset'), dirs_exist_ok=True)\n"
+            "    else:\n"
+            "        raise FileNotFoundError('Data not on Drive. Checked:\\n  ' + DRIVE_ZIP +\n"
+            "                                '\\n  ' + os.path.join(DRIVE_FOLDER, 'vlm_report_dataset') +\n"
+            "                                '\\nMount Drive (step 3) and check the folder/zip name.')\n"
+            "    print('Data ready on local disk.')\n"
+            "\n"
+            "assert os.path.exists(train_jsonl), 'Still missing after extract: ' + train_jsonl\n"
             "os.chdir(REPO_DIR)   # the image paths in the data are relative to here\n"
             "\n"
             "import json\n"
-            "first_line = open('vlm_report_dataset/converted/qwen/train.jsonl', encoding='utf-8').readline()\n"
-            "sample_image = json.loads(first_line)['images'][0]\n"
+            "sample_image = json.loads(open(train_jsonl, encoding='utf-8').readline())['images'][0]\n"
             "assert os.path.exists(sample_image), 'sample image not found: ' + sample_image\n"
             "print('OK - data and images found. Working directory:', os.getcwd())\n"
         ),
 
         markdown_cell(
             "## 5. Settings\n"
-            "Effective batch = `PER_DEVICE_BATCH_SIZE * GRAD_ACCUM_STEPS` = 2 x 8 = 16 (same as the 3090 run)."
+            "Effective batch = `PER_DEVICE_BATCH_SIZE * GRAD_ACCUM_STEPS` = 1 x 16 = 16 (same as the 3090 run). "
+            "If you have memory to spare, set batch=2 / accum=8 (still 16) to train ~2x faster."
         ),
         code_cell(config_cell_source(model_key, model_name, use_max_pixels, attn_default)),
 
         markdown_cell(
-            "## 6. Train (auto-resume)\n"
-            "Re-run this cell after a disconnect and it continues from the last checkpoint on Drive."
+            "## 6. Download the base model (watch the progress bar)\n"
+            "Downloads the ~16GB base model to the VM with a **live progress bar**, so you can confirm "
+            "it's really downloading (not hung). `hf_transfer` (step 2) makes it quick (~2-3 min). The "
+            "train cell then loads it with no extra download. On a fresh VM after a disconnect, re-run "
+            "this cell — it re-downloads (with progress) in a couple of minutes."
+        ),
+        code_cell(DOWNLOAD_CELL),
+
+        markdown_cell(
+            "## 7. Train (auto-resume)\n"
+            "Re-run this cell after a disconnect and it continues from the last checkpoint on Drive. "
+            "The base model is already on the VM (step 6), so no download happens here."
         ),
         code_cell(TRAIN_CELL),
 
         markdown_cell(
-            "## 7. Pick the best checkpoint by macro-F1 (not by loss)\n"
+            "## 8. Pick the best checkpoint by macro-F1 (not by loss)\n"
             "Loss is dominated by the common `H` class, so we score every checkpoint on the "
             "validation set and keep the one with the best per-condition macro-F1."
         ),
         code_cell(SELECT_CELL),
 
         markdown_cell(
-            "## 8. Final metrics on the test set\n"
+            "## 9. Final metrics on the test set\n"
             "Reports accuracy / precision / recall / F1 (per condition and overall), FDI detection, "
             "hallucination and miss rates, exact-report match, and ROUGE-L on the text."
         ),
         code_cell(FINAL_CELL),
 
         markdown_cell(
-            "## 9. Compare all models\n"
-            "After all 5 notebooks finish, every `metrics_<key>_test.json` is on Drive:\n"
+            "## 10. Compare all models\n"
+            "After all 5 notebooks finish, every `metrics_<key>_test.json` is on Drive under "
+            "`Thesis/pan924_runs/<model>/`:\n"
             "```bash\n"
             "python vlm_report_dataset/training/tools/compare_models.py "
-            "/content/drive/MyDrive/pan924_runs/*/metrics_*_test.json\n"
+            "/content/drive/MyDrive/Thesis/pan924_runs/*/metrics_*_test.json\n"
             "```"
         ),
     ]

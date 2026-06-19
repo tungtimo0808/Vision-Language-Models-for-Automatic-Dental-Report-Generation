@@ -22,6 +22,7 @@ MOUTH_JSON = ROOT / "annotations" / "mouth_and_teeth_labels.json"
 FDI_JSON = ROOT / "annotations" / "teeth_fdi_labels.json"
 BENCHMARK_JSON = ROOT / "faster_rcnn" / "outputs" / "benchmark" / "benchmark_results.json"
 OUT_DOCX = ROOT / "PAN924_Dataset_Report.docx"
+FDI_IMAGE = ROOT / "assets" / "FDI.jpg"
 
 DISEASE_REMAP = {"RiM": "Te", "Ri": "Te", "TeM": "Te", "I": "M3i"}
 
@@ -162,6 +163,25 @@ def add_bullet(doc, text):
     return p
 
 
+def add_image(doc, path, width_cm=14, caption=None):
+    """Insert an image if the file exists, then optionally add a caption line."""
+    if not Path(path).exists():
+        add_paragraph(doc, f"[Image not found: {path}]", italic=True)
+        return
+    from docx.shared import Cm as _Cm
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = p.add_run()
+    run.add_picture(str(path), width=_Cm(width_cm))
+    if caption:
+        cap = doc.add_paragraph()
+        cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        r = cap.add_run(caption)
+        r.font.size = Pt(10)
+        r.font.italic = True
+        r.font.color.rgb = RGBColor(0x44, 0x44, 0x44)
+
+
 def add_code_block(doc, text):
     p = doc.add_paragraph()
     run = p.add_run(text)
@@ -194,9 +214,10 @@ def build_report() -> None:
     stats = collect_stats()
     src = collect_source_meta()
 
-    train_n = count_jsonl(ROOT / "prepared_dataset/pan924_instruction_v2/micro.jsonl")
-    val_n = count_jsonl(ROOT / "prepared_dataset/pan924_instruction_v2/micro_val.jsonl")
-    test_n = count_jsonl(ROOT / "prepared_dataset/pan924_instruction_v2/micro_test.jsonl")
+    train_n = count_jsonl(ROOT / "vlm_report_dataset/common/train.jsonl")
+    val_n = count_jsonl(ROOT / "vlm_report_dataset/common/val.jsonl")
+    test_n = count_jsonl(ROOT / "vlm_report_dataset/common/test.jsonl")
+    balanced_n = count_jsonl(ROOT / "vlm_report_dataset/common_balanced/train.jsonl")
 
     doc = Document()
 
@@ -215,7 +236,7 @@ def build_report() -> None:
 
     sub = doc.add_paragraph()
     sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    sub_run = sub.add_run("Báo cáo cấu trúc dataset cho hệ thống chẩn đoán 2-stage (Faster R-CNN + Qwen2.5-VL)")
+    sub_run = sub.add_run("Báo cáo cấu trúc dataset: bộ dữ liệu 5-view cho Vision-Language Models và baseline Faster R-CNN")
     sub_run.font.size = Pt(12)
     sub_run.font.italic = True
 
@@ -252,7 +273,62 @@ def build_report() -> None:
     ]
     add_table(doc, ["Mã bệnh", "Số lượng", "Ý nghĩa"], remap_rows)
 
-    # FDI distribution
+    # ── FDI SYSTEM EXPLANATION ─────────────────────────────────────────────────
+    add_heading(doc, "The FDI Tooth Numbering System", level=3)
+
+    add_paragraph(doc,
+        "FDI stands for Fédération Dentaire Internationale. "
+        "It is the international standard for naming teeth. "
+        "Every tooth gets a two-digit number.")
+
+    add_paragraph(doc, "How to read an FDI number:", bold=True)
+    add_bullet(doc, "First digit  →  quadrant (1 to 4)")
+    add_bullet(doc, "Second digit →  position from the center line (1 to 8)")
+
+    add_paragraph(doc, "The four quadrants:", bold=True)
+    add_table(doc,
+        ["Quadrant", "Location", "FDI range", "Example"],
+        [
+            ("1", "Upper right  (maxilla, patient's right)",  "11 – 18", "Tooth 14 = upper right first premolar"),
+            ("2", "Upper left   (maxilla, patient's left)",   "21 – 28", "Tooth 26 = upper left first molar"),
+            ("3", "Lower left   (mandible, patient's left)",  "31 – 38", "Tooth 36 = lower left first molar"),
+            ("4", "Lower right  (mandible, patient's right)", "41 – 48", "Tooth 47 = lower right second molar"),
+        ],
+    )
+
+    add_paragraph(doc, "Position numbers:", bold=True)
+    add_table(doc,
+        ["Position", "Tooth name", "Note"],
+        [
+            ("1", "Central incisor",  "Closest to the center"),
+            ("2", "Lateral incisor",  ""),
+            ("3", "Canine",           "Corner tooth"),
+            ("4", "First premolar",   ""),
+            ("5", "Second premolar",  ""),
+            ("6", "First molar",      "Largest molar"),
+            ("7", "Second molar",     ""),
+            ("8", "Third molar",      "Wisdom tooth — may be missing"),
+        ],
+    )
+
+    add_paragraph(doc,
+        "So tooth 36 = quadrant 3 (lower left) + position 6 (first molar). "
+        "Tooth 18 = quadrant 1 (upper right) + position 8 (wisdom tooth).",
+        italic=True,
+    )
+
+    add_paragraph(doc,
+        "A full adult mouth has 32 teeth. "
+        "The dataset covers all 32 FDI positions (11–18, 21–28, 31–38, 41–48). "
+        "Not every patient has all 32 — wisdom teeth (18, 28, 38, 48) are often missing or impacted.",
+    )
+
+    add_image(doc, FDI_IMAGE, width_cm=14,
+              caption="Figure: FDI tooth numbering system. "
+                      "Quadrants 1–2 = upper jaw, 3–4 = lower jaw. "
+                      "Numbers increase away from the center.")
+
+    # ── FDI distribution table ─────────────────────────────────────────────────
     add_paragraph(doc, "Số răng theo loại FDI (32 lớp):", bold=True)
     add_paragraph(
         doc,
@@ -535,88 +611,132 @@ def build_report() -> None:
         "dataset_final_v2.json        ← Merged: disease + FDI gộp lại theo từng ảnh"
     ))
 
-    add_paragraph(doc, "Tầng 2 — Processed dataset (prepared_dataset/pan924_instruction_v2/)", bold=True)
+    add_paragraph(doc, "Tầng 2 — Common 5-view dataset (vlm_report_dataset/common/)", bold=True)
     add_code_block(doc, (
-        f"macro/macro_labels.csv   ← {stats['num_images']:,} dòng, mỗi dòng 1 ảnh panorama\n"
-        f"micro/micro_labels.csv   ← {stats['total_teeth']:,} dòng, mỗi dòng 1 răng crop\n"
-        "micro/images/            ← ảnh crop vuông từng răng (expand 1.8×1.2)"
+        f"train/val/test.jsonl     ← {train_n + val_n + test_n:,} samples (924 ảnh × 5 view)\n"
+        "images/ + crops          ← 1 ảnh toàn cảnh + 4 crop góc phần tư mỗi ảnh\n"
+        "metadata/                ← split_report, crop_manifest, validation_report..."
     ))
 
-    add_paragraph(doc, "Tầng 3 — Training JSONL (prepared_dataset/pan924_instruction_v2/)", bold=True)
+    add_paragraph(doc, "Tầng 3 — Converted per-model (vlm_report_dataset/converted/)", bold=True)
     add_code_block(doc, (
-        f"micro.jsonl       ← {train_n:,} entries train (ms-swift format)\n"
-        f"micro_val.jsonl   ← {val_n:,} entries val\n"
-        f"micro_test.jsonl  ← {test_n:,} entries test\n"
-        "macro*.jsonl      ← trống, chờ expert điền report tổng quát"
+        "qwen/ llava/ internvl/ phi/ paligemma/\n"
+        "  └── train/val/test.jsonl  ← cùng data, đổi sang format riêng từng model"
     ))
 
     add_paragraph(doc, "Script sinh ra từng tầng:", bold=True)
     add_code_block(doc, (
-        "merge_annotations.py        → dataset_final_v2.json (gộp 2 file COCO)\n"
-        "build_tooth_crop_dataset.py → tầng 2 (CSV + ảnh crop)\n"
-        "build_instruction_json.py   → tầng 3 (JSONL train)"
+        "merge_annotations.py            → dataset_final_v2.json (gộp 2 file COCO)\n"
+        "build_5view_common_dataset.py   → tầng 2 (5-view + raw JSONL)\n"
+        "generate_clinical_reports.py    → điền comment/summary (rule-based)\n"
+        "validate_common_dataset.py      → kiểm tra chất lượng\n"
+        "rebalance_common.py             → common_balanced (oversample bệnh hiếm)\n"
+        "convert_dataset.py              → tầng 3 (5 format model)"
     ))
 
-    # Comparison with OralGPT
-    add_heading(doc, "Sự khác biệt với OralGPT", level=3)
+    # Approach of this project
+    add_heading(doc, "Hướng tiếp cận của project", level=3)
 
-    add_paragraph(doc, "Project này áp dụng kiến trúc 2-stage có kiểm soát: Faster R-CNN làm nhiệm vụ detect + classify FDI răng, VLM chỉ tập trung classify bệnh trên từng crop. OralGPT để VLM tự xử lý toàn bộ ảnh thô.", italic=True)
+    add_paragraph(doc, "Project nghiên cứu nhiều Vision-Language Model trên cùng một bộ dữ liệu. Mỗi ảnh toàn cảnh được đưa thẳng vào VLM để sinh một báo cáo JSON có cấu trúc (răng theo FDI + tình trạng bệnh + nhận xét). Faster R-CNN được train riêng làm baseline để so sánh khả năng phát hiện răng ở mức tooth-level.", italic=True)
 
     compare_rows = [
-        ("Detection",
-         "Faster R-CNN riêng → crop → VLM",
-         "VLM nhận ảnh thô trực tiếp"),
-        ("Report",
-         "Per-tooth diagnosis theo FDI",
-         "Report tổng thể, không đến từng răng cụ thể"),
-        ("Output",
-         "LLM nhẹ tổng hợp per-tooth results",
-         "Không có"),
+        ("Đầu vào VLM", "1 ảnh toàn cảnh (4 crop dùng làm dữ liệu train phụ)"),
+        ("Đầu ra VLM", "Báo cáo JSON: 4 vùng, mỗi răng có FDI + bệnh + comment, kèm summary"),
+        ("Baseline so sánh", "Faster R-CNN detect + classify (disease và FDI tách riêng)"),
     ]
-    add_table(doc, ["Tiêu chí", "Project hiện tại", "OralGPT"], compare_rows)
+    add_table(doc, ["Thành phần", "Mô tả"], compare_rows)
 
     # ----------- Dataset 2
     doc.add_page_break()
-    add_heading(doc, "Dataset 2 — Dataset for VLM (Qwen2.5-VL)", level=2)
+    add_heading(doc, "Dataset 2 — Dataset for VLM (5-view)", level=2)
 
-    add_paragraph(doc, "Định dạng JSONL chuẩn ms-swift cho instruction tuning:", bold=True)
-    add_code_block(doc, json.dumps({
-        "messages": [
-            {"role": "user",
-             "content": "<image>Đây là ảnh X-quang răng số 18. Hãy chẩn đoán tình trạng của răng này."},
-            {"role": "assistant",
-             "content": "Răng 18 (Răng khôn hàm trên phải) - M3f: Răng đang trong giai đoạn phát triển."},
-        ],
-        "images": ["prepared_dataset/.../1000-F-19_ann2_fdi18.jpg"],
-    }, ensure_ascii=False, indent=2))
+    add_paragraph(doc,
+        "Mỗi ảnh panorama được chuẩn bị thành 5 view: 1 ảnh toàn cảnh và 4 crop góc phần tư "
+        "(trên-trái, trên-phải, dưới-trái, dưới-phải). 924 ảnh → 4.620 samples. "
+        "Dataset ở dạng JSONL model-agnostic, sau đó convert sang format từng model.")
 
-    add_paragraph(doc, "Thống kê số entry theo split:", bold=True)
+    add_paragraph(doc, "Hai loại task:", bold=True)
     add_table(
         doc,
-        ["File", "Entries", "Mô tả"],
+        ["Task", "Ảnh đầu vào", "Output"],
         [
-            ("micro.jsonl",      f"{train_n:,}", "Train split (80%)"),
-            ("micro_val.jsonl",  f"{val_n:,}",   "Validation split (10%)"),
-            ("micro_test.jsonl", f"{test_n:,}",  "Test split (10%)"),
-            ("Total",            f"{train_n + val_n + test_n:,}", "Toàn bộ tooth crops có FDI"),
+            ("full_quadrant_report", "Ảnh toàn cảnh", "JSON 4 vùng (răng FDI + bệnh) + summary"),
+            ("regional_report", "1 crop góc phần tư", "Danh sách răng trong vùng + comment"),
         ],
     )
-    add_paragraph(doc, "Split deterministic theo patient_id (MD5 hash) — không leak bệnh nhân giữa các split.", italic=True)
+
+    add_paragraph(doc, "Cấu trúc một dòng JSONL:", bold=True)
+    add_code_block(doc, (
+        "{\n"
+        '  "id", "image", "source_image", "view", "task",\n'
+        '  "messages": [\n'
+        '    {"role": "user",      "content": "<image>\\n<prompt>"},\n'
+        '    {"role": "assistant", "content": "<JSON đáp án>"}\n'
+        "  ],\n"
+        '  "labels":   {...},   ← nhãn gốc dùng để chấm điểm\n'
+        '  "metadata": {...}\n'
+        "}"
+    ))
+
+    add_paragraph(doc, "Thống kê số sample theo split:", bold=True)
+    add_table(
+        doc,
+        ["File", "Samples", "Mô tả"],
+        [
+            ("train.jsonl", f"{train_n:,}", "739 ảnh × 5 view"),
+            ("val.jsonl",   f"{val_n:,}",   "92 ảnh × 5 view"),
+            ("test.jsonl",  f"{test_n:,}",  "93 ảnh × 5 view"),
+            ("Total",       f"{train_n + val_n + test_n:,}", "924 ảnh"),
+        ],
+    )
+    add_paragraph(doc,
+        "Chia split ở mức ảnh (cả 5 view của 1 ảnh luôn cùng split → không leak), stratified theo "
+        "bệnh hiếm, thứ tự sắp xếp bằng hash SHA-256 (seed 924) nên tái lập được.",
+        italic=True,
+    )
+
+    add_paragraph(doc, "Phiên bản cân bằng (tùy chọn):", bold=True)
+    add_paragraph(doc,
+        f"vlm_report_dataset/common_balanced/ — train tăng lên {balanced_n:,} dòng do oversample các "
+        "crop chứa bệnh hiếm (Dc, Im, P, Rr, M3f); val/test giữ nguyên.",
+        italic=True,
+    )
+
+    add_paragraph(doc, "5 format model đã convert:", bold=True)
+    add_paragraph(doc,
+        "vlm_report_dataset/converted/{qwen, llava, internvl, phi, paligemma}/ — cùng nội dung, "
+        "khác cách đóng gói (messages / conversations / prompt-response / prefix-suffix).",
+        italic=True,
+    )
 
     # Prompt design
-    add_heading(doc, "Thiết kế Prompt — Canonical Single Template", level=3)
+    add_heading(doc, "Prompt template", level=3)
 
-    add_paragraph(doc, "Một prompt duy nhất được dùng cho cả training và inference:", bold=True)
-    add_code_block(doc, "Đây là ảnh X-quang răng số {fdi}. Hãy chẩn đoán tình trạng của răng này.")
+    add_paragraph(doc, "Prompt cho ảnh toàn cảnh (full_quadrant_report):", bold=True)
+    add_code_block(doc, (
+        "<image>\n"
+        "This is a full panoramic dental radiograph.\n"
+        "Divide the image into four image-space regions: image_upper_left,\n"
+        "image_upper_right, image_lower_left, and image_lower_right.\n"
+        "For each region, list the visible annotated teeth using FDI notation\n"
+        "and report each tooth condition.\n"
+        "Return only valid JSON with this schema: {...}"
+    ))
 
-    add_paragraph(doc, "Lý do chọn single canonical prompt (theo convention CheXagent, Qwen2.5-VL official):", bold=True)
-    add_bullet(doc, "Pipeline 2-stage: prompt được sinh tự động từ output Faster R-CNN, không phải người dùng gõ.")
-    add_bullet(doc, "Training và inference dùng byte-identical prompt → không drift.")
-    add_bullet(doc, "Model tập trung 100% capacity vào học disease, không lãng phí cho paraphrase.")
-    add_bullet(doc, "Reproducibility: eval/test luôn cùng prompt format.")
+    add_paragraph(doc, "Prompt cho crop (regional_report):", bold=True)
+    add_code_block(doc, (
+        "<image>\n"
+        "This is the {region} crop of a panoramic dental radiograph.\n"
+        "Identify the visible annotated teeth using FDI notation and report\n"
+        "each tooth condition.\n"
+        "Return only valid JSON with this schema: {...}"
+    ))
 
-    add_paragraph(doc, "Cấu trúc câu trả lời:", bold=True)
-    add_code_block(doc, "Răng {FDI} ({tên giải phẫu Việt}) - {mã bệnh}: {mô tả lâm sàng}")
+    add_paragraph(doc,
+        "Prompt cố định (không paraphrase), giống nhau giữa train và inference → tái lập được, "
+        "và model tập trung học nội dung nha khoa thay vì học cách diễn đạt.",
+        italic=True,
+    )
 
     # ------------------------------------------------------------ B. BENCHMARK
     if BENCHMARK_JSON.exists():
@@ -733,25 +853,20 @@ def build_report() -> None:
     # Pipeline inference flow
     add_heading(doc, "Luồng inference end-to-end", level=3)
     add_code_block(doc, (
-        "Doctor upload panorama\n"
+        "Bác sĩ upload 1 ảnh panorama\n"
         "        │\n"
         "        ▼\n"
         "┌────────────────────────────────┐\n"
-        "│ Stage 1: Faster R-CNN          │  detect + classify FDI (32 classes)\n"
+        "│ Vision-Language Model          │  đọc cả ảnh toàn cảnh\n"
         "└────────────────────────────────┘\n"
-        "        │ {bbox, fdi}[]\n"
+        "        │\n"
         "        ▼\n"
-        "┌────────────────────────────────┐\n"
-        "│ Pipeline orchestrator          │  crop + sinh prompt ẩn\n"
-        "└────────────────────────────────┘\n"
-        "        │ (image_crop, prompt)\n"
+        "Báo cáo JSON 4 vùng (răng FDI + bệnh + comment) + summary\n"
+        "        │\n"
         "        ▼\n"
-        "┌────────────────────────────────┐\n"
-        "│ Stage 2: Qwen2.5-VL            │  classify disease per tooth\n"
-        "└────────────────────────────────┘\n"
-        "        │ per-tooth diagnosis\n"
-        "        ▼\n"
-        "Aggregator (LLM nhẹ) → final report → doctor"
+        "Bác sĩ kiểm tra & chỉnh sửa → báo cáo cuối\n"
+        "\n"
+        "(Faster R-CNN chạy song song như baseline để so sánh độ chính xác phát hiện răng.)"
     ))
 
     # Save

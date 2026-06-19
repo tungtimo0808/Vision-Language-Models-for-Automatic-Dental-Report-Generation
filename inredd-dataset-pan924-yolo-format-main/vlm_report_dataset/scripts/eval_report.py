@@ -31,7 +31,7 @@ from collections import defaultdict
 HERE = os.path.dirname(os.path.abspath(__file__))
 DS = os.path.abspath(os.path.join(HERE, ".."))
 
-RARE = {"Dc", "Im", "P", "Rr", "M3f"}  # rarity tiers from dental_kg.json (tooth_occurrences < ~160)
+RARE = {"Dc", "Im", "P", "Rr", "M3f"}  # tooth_occurrences < ~160 in train split
 
 
 def resolve_in(path):

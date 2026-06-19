@@ -32,6 +32,7 @@ __pycache__/
 
 # ===== Large data files =====
 *.jsonl
+*.zip
 
 # ===== LaTeX build artifacts =====
 *.aux

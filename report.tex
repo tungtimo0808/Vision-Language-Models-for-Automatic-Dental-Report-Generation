@@ -269,7 +269,15 @@ Because of that, Faster R-CNN is useful as a comparison point. Later experiments
 
 \subsection{Raw Image Collection}
 
-The raw data comes from the PAN924 panoramic dental X-ray dataset \cite{inredd_pan924_2025}. It contains 924 panoramic images. Each image includes tooth annotations with the FDI tooth number and the dental condition label.
+The raw data comes from the PAN924 panoramic dental X-ray dataset \cite{inredd_pan924_2025}. It contains 924 panoramic images. Each image includes tooth annotations with the FDI tooth number and the dental condition label. Figure~\ref{fig:annotated-example} shows what one annotated image looks like.
+
+\begin{figure}[H]
+    \centering
+    % Upload the annotated example image as annotated_example.png
+    \includegraphics[width=\textwidth]{annotated_example.png}
+    \caption{An annotated panoramic image from the PAN924 dataset. Each tooth is marked with an oriented bounding box and its FDI number. The boxes are stored as four-corner polygons (rotated rectangles), not pixel-tight tooth outlines. In the VLM dataset, each tooth is reduced to its FDI number and its condition label.}
+    \label{fig:annotated-example}
+\end{figure}
 
 The original images are stored in the \texttt{images/} folder. The main annotation file is \texttt{annotations/dataset\_final\_v2.json}. This file is used as the source for the VLM dataset. No new disease labels are created by hand in this step. The labels come from the existing ground-truth annotation file.
 
@@ -295,9 +303,13 @@ For each panoramic image, the pipeline creates five image views:
 \end{figure}
 
 
-The regional crops are not random. The image is split using the image width and the tooth annotation positions. The vertical split uses the median position of upper and lower tooth annotations. A 10\% overlap is added in both directions to keep useful tooth information near the crop borders.
+The regional crops are not random. The split lines are computed from the tooth annotation positions in each image. The left-right split is fixed at the middle of the image. The top-bottom split is not fixed. The script finds the median height of the upper teeth and the median height of the lower teeth. It then cuts halfway between these two heights. This puts the cut between the upper and lower teeth, so it moves with each patient's image instead of sitting at a fixed row.
 
-The region names are image-space names. For example, \texttt{image\_upper\_left} means the upper-left crop in the image. It does not mean the anatomical left side of the patient.
+A 10\% overlap is added along both the horizontal and vertical boundaries of each crop. The main reason is that a tooth sitting exactly on a split line would otherwise be cut in half and appear incomplete. The 10\% margin keeps boundary teeth fully visible in at least one adjacent crop. A smaller overlap, such as 5\%, could still cut these teeth. A larger overlap would make each crop less zoomed-in, so the detail would be less clear.
+
+The region names are image-space names. For example, \texttt{image\_upper\_left} means the upper-left part of the image. It does not mean the anatomical left side of the patient, because a panoramic X-ray is a mirrored view: the patient's right side appears on the image's left.
+
+The five-view design serves two purposes. The full image gives the model global context: it sees all four quadrants together and can observe overall patterns such as missing teeth or widespread caries. The four regional crops zoom into each quadrant and make individual teeth appear larger relative to the image area. This helps the model read fine details such as a small carious lesion or the margin of a crown. Training on both views at the same time means the model learns from both scales in one dataset.
 
 \begin{table}[H]
 \centering
@@ -317,6 +329,71 @@ Total & 924 & 4620 & 924 full reports and 3696 regional reports \\
 
 
 
+
+\subsection{The FDI Tooth Numbering System}
+
+The PAN924 annotations name each tooth with an FDI number. FDI stands for F\'ed\'eration Dentaire Internationale. It is the tooth numbering system used by most dentists around the world. Every tooth gets a two-digit number. The thesis keeps this system, so the model learns to name teeth the same way a dentist does.
+
+The first digit is the quadrant. The mouth is split into four quadrants: upper right, upper left, lower left, and lower right. The sides are read from the patient's point of view, not from the viewer's side. Table~\ref{tab:fdi-quadrant} lists the four quadrants and their number ranges.
+
+\begin{table}[H]
+\centering
+\caption{The four FDI quadrants (first digit)}
+\label{tab:fdi-quadrant}
+\begin{tabular}{ccc}
+\toprule
+First digit & Location (patient's view) & FDI range \\
+\midrule
+1 & Upper right & 11--18 \\
+2 & Upper left  & 21--28 \\
+3 & Lower left  & 31--38 \\
+4 & Lower right & 41--48 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The second digit is the tooth position inside the quadrant. Counting starts at the front center of the mouth and moves toward the back. Position 1 is the central incisor, right next to the midline. Position 8 is the third molar, the wisdom tooth at the very back. Table~\ref{tab:fdi-position} lists the eight positions.
+
+\begin{table}[H]
+\centering
+\caption{The eight tooth positions (second digit)}
+\label{tab:fdi-position}
+\begin{tabular}{cl}
+\toprule
+Second digit & Tooth name \\
+\midrule
+1 & Central incisor \\
+2 & Lateral incisor \\
+3 & Canine \\
+4 & First premolar \\
+5 & Second premolar \\
+6 & First molar \\
+7 & Second molar \\
+8 & Third molar (wisdom tooth) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Reading an FDI number is simple. The two digits are read one by one, not as a single number. For example, tooth 36 is read as ``three, six''. The first digit 3 is the lower-left quadrant. The second digit 6 is the first molar. So tooth 36 is the lower-left first molar. In the same way, tooth 11 is the upper-right central incisor, and tooth 48 is the lower-right wisdom tooth.
+
+A full adult mouth has 32 teeth, 8 in each quadrant. Many patients do not have all 32. Wisdom teeth (position 8) are often missing, already removed, or still under the gum. This is one reason why some FDI numbers appear less often in the dataset.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{FDI.jpg}
+    \caption{The FDI tooth numbering system. Quadrants 1 and 2 are the upper jaw; quadrants 3 and 4 are the lower jaw. Inside each quadrant, the numbers grow from the front center toward the back.}
+    \label{fig:fdi}
+\end{figure}
+
+\subsection{Stratified Data Split}
+
+The dataset is divided into train, validation, and test. The split is done at the source-image level. All five views of one image (the full image and its four crops) always go to the same split. This matters because the five views show the same mouth. Putting some views in training and others in test would let the model see the test anatomy during training. This is a form of data leakage, and it would make the test results look better than they really are.
+
+The split is also stratified by dental condition. For each image, the script finds the rarest condition that appears in it. It then groups the images by this condition. The 80/10/10 split is applied inside each group. This way, each condition, even a rare one, is spread across train, validation, and test in similar proportions. A plain random split could, by bad luck, send all images of a rare condition to one split.
+
+The order inside each group is set by a hash, not by chance. The script takes the SHA-256 hash of the image filename, together with a fixed seed of 924, and sorts the images by this value. It then cuts the sorted list into 80\%, 10\%, and 10\%. A hash is a fixed-length fingerprint of the text, and the same filename always gives the same hash. So the split is fully reproducible: running the script again gives the exact same result. After this first pass, a small balancing step moves a few images between splits so the final sizes match the targets.
+
+The final split has 739 training images, 92 validation images, and 93 test images, which is about 80/10/10.
 
 \subsection{Common Report Schema and Prompt Templates}
 
@@ -404,13 +481,34 @@ Code & Condition name \\
 
 \subsection{Balancing the Rare Conditions}
 
-The dental conditions are not evenly distributed. Healthy teeth and restorations appear very often. Other conditions are rare. In the training split, crown destruction (\texttt{Dc}), implant (\texttt{Im}), pontic (\texttt{P}), residual root (\texttt{Rr}), and developing third molar (\texttt{M3f}) each appear far less than the common labels. If the data is used as it is, the model sees these rare conditions only a few times. It can then learn to ignore them.
+The dental conditions are not evenly distributed. In the training split, healthy teeth (\texttt{H}) and restorations (\texttt{R}) together make up most of the annotated teeth. Five conditions appear far less often: crown destruction (\texttt{Dc}), implant (\texttt{Im}), pontic (\texttt{P}), residual root (\texttt{Rr}), and developing third molar (\texttt{M3f}). If the data is used as it is, the model sees these rare conditions only a small number of times and can learn to ignore them.
 
-To reduce this problem, the script \texttt{rebalance\_common.py} builds a balanced training set. It does not create new images. It only repeats some existing samples, so the rare conditions are seen more often. The new set is written to \texttt{common\_balanced/}, next to the common dataset.
+To reduce this problem, the script \texttt{rebalance\_common.py} oversamples the rare-condition training rows. It does not create new images. It repeats existing samples so that each rare condition appears more often during training. The result is written to \texttt{common\_balanced/}.
 
-The balancing uses two simple ideas together. First, only the regional crops are repeated, never the full reports. A crop lists about eleven teeth, while a full report lists about twenty-one. In a crop, a rare tooth is a larger part of the answer, so the learning signal is stronger. Second, each rare condition gets a copy multiplier based on how rare it is. A rarer condition is copied more times.
+\minisection{Why only regional crops are oversampled}
 
-A few rules stop the copying from going too far. The multiplier is capped at eight, so no class grows without limit. When one sample has more than one rare condition, the multiplier is the largest one, not the product. The copies are spread over all crops that contain the condition, so a single image is not repeated too many times. The validation and test sets are copied without any change, so the evaluation stays honest.
+Only the four regional crop rows are repeated, never the full panoramic report rows. The reason is signal density. A regional crop contains about 11 annotated teeth on average, while a full report contains about 21. If a crop contains one implant, that implant makes up roughly 1/11 of the answer. In a full report, the same implant makes up only 1/21. So repeating a crop gives a stronger learning signal for the rare condition, because the rare finding takes up a larger part of the answer.
+
+\minisection{The multiplier formula}
+
+Each rare condition receives a copy multiplier based on its prevalence in the regional training crops. Let $p_c$ be the fraction of training crop rows that contain at least one instance of condition $c$, and let $p_{\min}$ be the smallest $p_c$ among the five rare conditions. The multiplier for condition $c$ is:
+
+\begin{equation}
+m(c) = \min\!\left(8,\; \frac{p_{\min}}{p_c} \times 8\right)
+\label{eq:multiplier}
+\end{equation}
+
+This formula has three properties. First, the rarest condition always gets the highest multiplier of 8. Second, a less rare condition gets a smaller multiplier. Third, after oversampling, all five rare conditions appear at roughly the same rate in the training set.
+
+Image-level prevalence ($p_c$) is used rather than raw tooth count. One patient can have multiple implants, so using tooth count gives extra weight to patients who happen to have many instances. Prevalence counts each patient once and is a cleaner measure of how common the condition is across the patient population.
+
+\minisection{Why the cap is 8}
+
+Without a cap, a condition appearing in very few images would get a very large multiplier. The model would then see those same few images hundreds of times and memorize them instead of learning the general visual pattern. The cap of 8 limits the risk of overfitting to single patients, while still giving the rare conditions a much stronger signal.
+
+\minisection{Why MAX-combine is used for samples with multiple rare conditions}
+
+Some crops contain more than one rare condition, for example an implant and a residual root in the same quadrant. Multiplying the two multipliers together ($8 \times 3.97 \approx 32$) would create too many copies of that crop. Instead, the copy count for that crop is set to the maximum of its individual multipliers ($\max(8, 3.97) = 8$). This limits the total growth while still giving each rare condition enough coverage.
 
 \begin{table}[H]
 \centering
@@ -448,6 +546,149 @@ Test & 465 & 465 \\
 The balanced training set is kept as a separate option. Later experiments can train on the original training split or on the balanced one, and then compare the two.
 
 
+\section{Vision-Language Models Under Study}
+
+The thesis is built so that several vision-language models can be trained and tested on the same dental data. Five models are used: Qwen2.5-VL, LLaVA-OneVision, InternVL3, Phi-3.5-vision, and PaliGemma~2. This section explains why these five were chosen, what they share, and how each one differs.
+
+\subsection{Model Selection and Comparison Design}
+
+The goal is a fair comparison, so the study is set up like a controlled experiment. The model is the only thing that changes. Everything else is kept the same: the same training data, the same data split, the same LoRA settings, and the same evaluation script. Because of this, any difference in the results can be linked to the model, not to a different setup.
+
+The five models are not picked at random. They are chosen to cover four design choices that could matter for reading small teeth in a panoramic X-ray:
+
+\begin{itemize}
+    \item \textbf{Vision encoder:} the set spans a native dynamic-resolution ViT, SigLIP, InternViT, and CLIP.
+    \item \textbf{Language model family:} the set spans Qwen, Phi, and Gemma.
+    \item \textbf{Model size:} the set ranges from about 3B to about 8B parameters.
+    \item \textbf{Image handling:} most models keep a large or native image size, while one (PaliGemma~2) uses a fixed 448-pixel input.
+\end{itemize}
+
+With this spread, the comparison can show which design choices help most on this task. For example, it can hint at whether a larger model is worth the extra cost, or whether keeping the full image resolution helps the model read small findings.
+
+Three more practical reasons guided this choice. First, all five are well-known open models with public weights. This makes the work easy to reproduce. It also lets us fine-tune the models ourselves, which a closed model behind an API usually does not allow. Second, all five are instruction-tuned, so they can already follow a prompt and return JSON. Third, all five are small enough, about 3B to 8B, to fine-tune on a single GPU with LoRA. Much larger models, such as 72B versions, would not fit on the hardware used here.
+
+\subsection{Shared Architecture}
+
+All five models follow the same basic design, even though the details differ. A vision-language model has three parts. The first part is a vision encoder. It is usually a Vision Transformer (ViT). It reads the image and turns it into a sequence of image tokens. The second part is a connector, often a small multi-layer perceptron (MLP). It maps the image tokens into the same space that the language model uses for words. The third part is a language model. It reads the image tokens and the text prompt together, and then writes the answer one token at a time.
+
+The main differences between the five models are: which vision encoder they use, which language model they use, how large they are, and how they handle a high-resolution image. Table~\ref{tab:vlm-summary} compares the five models on these points.
+
+\begin{table}[H]
+\centering
+\caption{The five candidate vision-language models}
+\label{tab:vlm-summary}
+\begin{tabular}{lllll}
+\toprule
+Model & Vision encoder & Language model & Size & Image handling \\
+\midrule
+Qwen2.5-VL-7B      & native dynamic ViT   & Qwen2.5 (7B)      & $\sim$8B  & native resolution \\
+LLaVA-OneVision-7B & SigLIP SO400M        & Qwen2 (7B)        & $\sim$8B  & AnyRes tiling \\
+InternVL3-8B       & InternViT-300M       & Qwen2.5 (7B)      & $\sim$8B  & 448px tiles \\
+Phi-3.5-vision     & CLIP ViT-L/14        & Phi-3.5-mini (3.8B) & $\sim$4.2B & dynamic cropping \\
+PaliGemma~2 (3B)   & SigLIP-So400m        & Gemma~2 (2B)      & $\sim$3B  & fixed 448px \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A high-resolution panoramic X-ray matters here. The teeth are small and close together. A model that can keep more image detail has a better chance to read each tooth. This is why the image-handling column is important for this task. Four of the five models can take a larger or native image size. Only PaliGemma~2 uses a fixed 448-pixel input.
+
+\subsection{The Five Models}
+
+Each model is described in short below. The checkpoint name is the exact version used in this project, and the citation points to its paper or model card. The figures show the architecture of each model.
+
+\minisection{Qwen2.5-VL-7B-Instruct (Alibaba)}
+
+Checkpoint: \texttt{Qwen/Qwen2.5-VL-7B-Instruct} \cite{qwen25vl2025}. Its vision encoder is a ViT with native dynamic resolution, so the image is not forced to a fixed size and small details are kept. The language model is the Qwen2.5 decoder (about 7B). This is the strongest general model in the set.
+
+\begin{figure}[H]
+    \centering
+    % Upload the Qwen2.5-VL architecture figure as qwen_arch.png
+    \includegraphics[width=0.85\textwidth]{qwen_arch.png}
+    \caption{Architecture of Qwen2.5-VL: a native dynamic-resolution ViT feeds image tokens into the Qwen2.5 language model.}
+    \label{fig:qwen-arch}
+\end{figure}
+
+\minisection{LLaVA-OneVision-7B}
+
+Checkpoint: \texttt{llava-hf/llava-onevision-qwen2-7b-ov-hf} \cite{li2024llavaonevision}. It pairs a SigLIP (SO400M) encoder with a two-layer MLP connector and a Qwen2 language model (about 7B). For high-resolution images it uses AnyRes, which splits the image into patches so more detail is seen.
+
+\begin{figure}[H]
+    \centering
+    % Upload the LLaVA-OneVision architecture figure as llava_arch.png
+    \includegraphics[width=0.85\textwidth]{llava_arch.png}
+    \caption{Architecture of LLaVA-OneVision: a SigLIP encoder and a two-layer MLP connector feed image tokens into the Qwen2 language model. AnyRes splits a high-resolution image into patches.}
+    \label{fig:llava-arch}
+\end{figure}
+
+\minisection{InternVL3-8B (OpenGVLab)}
+
+Checkpoint: \texttt{OpenGVLab/InternVL3-8B} \cite{zhu2025internvl3}. It follows a ViT--MLP--LLM design, with an InternViT-300M encoder and a Qwen2.5 language model (about 7B). It cuts a large image into 448-pixel tiles and uses a pixel unshuffle step to keep the token count low, which helps with tiny findings.
+
+\begin{figure}[H]
+    \centering
+    % Upload the InternVL3 architecture figure as internvl_arch.png
+    \includegraphics[width=0.85\textwidth]{internvl_arch.png}
+    \caption{Architecture of InternVL3: the ViT--MLP--LLM pattern with InternViT-300M, a two-layer MLP, and the Qwen2.5 language model. Pixel unshuffle reduces the token count per tile.}
+    \label{fig:internvl-arch}
+\end{figure}
+
+\minisection{Phi-3.5-vision-instruct (Microsoft)}
+
+Checkpoint: \texttt{microsoft/Phi-3.5-vision-instruct} \cite{abdin2024phi3}. It is one of the smaller models, about 4.2B in total, with a CLIP ViT-L/14 encoder and the Phi-3.5-mini language model (3.8B). It uses dynamic cropping for high-resolution input, and its small size needs less GPU memory.
+
+\minisection{PaliGemma~2 (3B, 448px) (Google)}
+
+Checkpoint: \texttt{google/paligemma2-3b-pt-448} \cite{steiner2024paligemma2}. It uses a SigLIP-So400m encoder, a single linear projection, and a Gemma~2 language model (about 2B), for about 3B in total. It differs from the others in two ways: it uses a fixed 448-pixel image size, and it is a prefix-LM, where the image and the prompt attend to each other freely. It is a gated model, so its license must be accepted before download.
+
+\begin{figure}[H]
+    \centering
+    % Upload the PaliGemma 2 architecture figure as paligemma_arch.png
+    \includegraphics[width=0.85\textwidth]{paligemma_arch.png}
+    \caption{Architecture of PaliGemma~2: a SigLIP-So400m encoder with a linear projection feeds image tokens into the Gemma~2 language model, which uses a prefix-LM attention pattern.}
+    \label{fig:paligemma-arch}
+\end{figure}
+
+\subsection{How the Models Are Adapted (LoRA and QLoRA)}
+
+All five models are large, from about 3 to 8 billion parameters. Training every weight would need a lot of GPU memory and a lot of data. The dental dataset is small, so full fine-tuning is not a good fit. It would be slow and would overfit easily. For these reasons the models are not fully retrained. They are adapted with LoRA, and on the 24~GB RTX 3090 with QLoRA.
+
+\minisection{LoRA: low-rank adaptation}
+
+LoRA keeps all the original model weights frozen. It does not change them at all. Instead, it adds a small trainable update next to each weight matrix. The idea behind LoRA is that the change needed to fit a new task is ``low-rank''. This means the change can be written as the product of two thin matrices instead of one large one.
+
+Take an original weight matrix $W$ of size $d \times k$. LoRA adds two small matrices: $A$ of size $r \times k$ and $B$ of size $d \times r$. The number $r$ is the rank, and it is small (here $r = 8$). During the forward pass, the layer output becomes:
+
+\begin{equation}
+h = Wx + \frac{\alpha}{r}\, BAx
+\label{eq:lora}
+\end{equation}
+
+The matrix $W$ stays frozen, and only $A$ and $B$ are trained. The term $\alpha/r$ is a fixed scaling factor that sets how strong the update is. Because $r$ is small, $A$ and $B$ together hold far fewer numbers than $W$. This drops the trainable weights from billions to only a few million.
+
+\begin{figure}[H]
+    \centering
+    % Upload a LoRA / QLoRA diagram as qlora_arch.png
+    \includegraphics[width=0.7\textwidth]{qlora_arch.png}
+    \caption{LoRA adaptation. The original weight $W$ is frozen (in QLoRA it is stored in 4-bit). Only the two low-rank matrices $A$ and $B$ are trained, and their output is added to the frozen path.}
+    \label{fig:qlora-arch}
+\end{figure}
+
+\minisection{QLoRA: LoRA on a 4-bit base}
+
+QLoRA adds one more step on top of LoRA. Before training, the frozen base model is loaded in 4-bit instead of the usual 16-bit. This is done with the BitsAndBytes library, using the NF4 (4-bit NormalFloat) format. Storing the base weights in 4-bit cuts their memory by about four times. The small LoRA matrices $A$ and $B$ are still kept in bfloat16, so the trained part stays precise.
+
+The 4-bit weights are only used to run the frozen base forward. They are never updated. All the learning happens in the bfloat16 LoRA matrices. This is why a 4-bit base does not hurt training much: the precision that matters for the gradient updates is kept in the adapter. Thanks to this, even the 8B model fits on one 24~GB GPU.
+
+\minisection{What is trained and what is frozen}
+
+LoRA is applied to all linear layers of the language model (the setting \texttt{target\_modules = all-linear}). The vision encoder is frozen and gets no LoRA, because it is already pretrained on large image data and the dental set is too small to retrain it safely. So the only trained parts are the LoRA matrices on the language-side linear layers. Everything else keeps its original values.
+
+\minisection{Two hardware setups}
+
+The project is prepared for two GPUs, and the only real difference between them is the 4-bit step. On a 24~GB RTX 3090, memory is tight, so QLoRA is used: the frozen base model is loaded in 4-bit. On a 40~GB A100, there is enough memory, so the 4-bit step is dropped and the base model is kept in bfloat16. That second case is plain LoRA, not QLoRA. Both setups train the same LoRA matrices, with the same rank, the same learning rate, and the same effective batch size, so the two runs stay comparable. The A100 also reads images at a slightly higher resolution, because it has more memory to spare.
+
+This same method is used for all five models. The exact values, such as the rank, the alpha, and the learning rate, are listed in the Experimental Setup chapter. Using one shared method means the later comparison between the models is fair: any difference in results comes from the models themselves, not from different training tricks.
+
 \section{Prepared Outputs for Later Model Experiments}
 
 The common dataset is model-independent. After it is validated, the conversion script writes the same data into model-specific folders. This keeps the source data fixed while allowing later experiments with different VLM families.
@@ -466,7 +707,19 @@ Model training and evaluation are the next stage of the thesis. The training scr
 
 Five VLM families are planned for training: Qwen, LLaVA, InternVL, Phi, and PaliGemma. All of them use the same training settings. This is done on purpose, so the later comparison between models is fair. Only the model name, the output folder, and the image resolution option change between models.
 
-The models are fine-tuned with LoRA. LoRA trains a small number of extra weights and keeps the base model mostly frozen. This is cheaper and fits on a single GPU. On a 24~GB RTX 3090, the base model is loaded in 4-bit, which is the QLoRA setting, to save memory. On a 40~GB A100, the model is trained in bf16 without quantization. The hyperparameters are the same in both cases, so the two machines give comparable runs.
+The models are adapted with LoRA, and on the 24~GB RTX 3090 with QLoRA. How LoRA and QLoRA work is explained in the Methodology chapter, so this chapter only lists the exact settings. On a 40~GB A100, the base model can be trained in bfloat16 without 4-bit quantization. The hyperparameters are the same on both machines, so the two machines give comparable runs.
+
+\minisection{LoRA rank and alpha}
+
+The rank is set to 8. A lower rank means fewer trainable parameters and less risk of overfitting on a small dataset. Rank 8 is a common choice for 7B models. It is large enough to learn the task, but still small. The alpha is set to 32. In the LoRA update, the added weights are scaled by $\alpha / r$, which is $32 / 8 = 4$ here. This factor sets how strongly the update changes the output. A value of 4 gives a clear learning signal without changing the frozen weights too much.
+
+\minisection{Why the vision encoder is frozen}
+
+Each VLM has a vision encoder (a ViT-based model) that converts the input image into feature vectors. This encoder is already pretrained on a huge amount of image data, so its features are good. The dental set has only 3695 training images. That is too small to retrain the encoder safely, and training it could harm its general features. So it is kept frozen. Only the language-side adapter learns to read the dental features, which is more stable.
+
+\minisection{Gradient accumulation}
+
+The per-device batch size is 1 because loading a 7B model with an image leaves very little GPU memory for storing multiple samples at once. Gradient accumulation is set to 16, so gradients from 16 consecutive forward passes are summed before one weight update. This gives an effective batch size of 16 without needing 16 samples in memory at the same time. A larger effective batch size makes the gradient estimate less noisy and often leads to more stable training.
 
 \begin{table}[H]
 \centering
@@ -521,6 +774,22 @@ Generation     & The share of outputs that are valid JSON, and the ROUGE-L score
 \end{table}
 
 These metrics cover both parts of the task. The detection and classification metrics show if the model finds the correct dental findings. The generation metrics show if the output is valid and readable. The detection and classification metrics can also be used for the Faster R-CNN baseline, so the recognition part can be compared on the same ground.
+
+\minisection{ROUGE-L}
+
+ROUGE-L measures text similarity using the Longest Common Subsequence (LCS) between two strings. LCS finds the longest sequence of tokens that appears in both the predicted text and the reference text in the same order, but the tokens do not have to be adjacent. For example, if the reference is ``caries on tooth 33 and restoration on tooth 35'' and the prediction is ``tooth 33 caries, tooth 35 restored'', ROUGE-L will find a long common subsequence even though the word order is slightly different.
+
+ROUGE-L is more appropriate for dental report text than ROUGE-1 or ROUGE-2, because it captures word-order similarity without requiring exact adjacent matches. A report that lists the correct tooth numbers and condition names in the right order scores high. A report that uses wrong numbers or invents conditions that do not exist scores low.
+
+The ROUGE-L score is computed from scratch in \texttt{eval\_report.py} using the standard LCS dynamic programming algorithm, without relying on external libraries. This makes the evaluation code self-contained and easy to reproduce.
+
+\minisection{Detection and classification metrics}
+
+Precision, recall, and F1 are computed at the tooth level. For detection, a predicted tooth is a true positive if its FDI number matches a gold tooth in the same region. Precision measures how many predicted teeth are correct; recall measures how many gold teeth were found. For classification, the same tooth-level matching is used, and a predicted condition is correct only if it matches the gold condition exactly. Per-condition F1 is also reported so that rare-condition performance is visible separately from the overall average.
+
+\minisection{Hallucination and miss rates}
+
+Two additional metrics are reported alongside detection. The hallucination rate is the fraction of predicted teeth that do not match any gold tooth; these are invented findings. The miss rate is the fraction of gold teeth that the model did not predict. Both rates are important for a dental support tool: a model that invents many findings could mislead the dentist, and a model that misses many findings is not useful as a draft report.
 
 \chapter{Results}
 
